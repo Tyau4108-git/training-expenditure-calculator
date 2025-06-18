@@ -316,19 +316,17 @@ button:hover::before {
     100% { top: 100vh; }
 }
 
-/* トレーニングセクション関連のスタイル */
+/* トレーニングセクション関連のスタイル（修正版） */
 #training-sections-container {
     display: flex;
     flex-direction: column;
     gap: 1rem;
     margin-bottom: 1.5rem;
     position: relative;
-    min-height: 150px;
+    min-height: auto; /* 150pxから変更 */
     padding: 0.5rem;
     transition: all 0.3s ease;
-    will-change: transform;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
+    /* touch-action を削除 */
 }
 
 #training-sections-container::after {
@@ -361,7 +359,7 @@ button:hover::before {
     border-radius: var(--border-radius);
     transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     width: 100%;
-    touch-action: pan-y;
+    /* touch-action: pan-y を削除 */
     -webkit-user-select: none;
     user-select: none;
 }
@@ -932,12 +930,21 @@ button:hover::before {
     text-shadow: 0 0 5px rgba(255, 209, 102, 0.4);
 }
 
-/* モバイル対応の改善 */
+/* モバイル対応の改善（修正版） */
 @media (max-width: 768px) {
-    /* コンテナの余白調整 */
+    /* スクロール性能の改善 */
+    body {
+        -webkit-overflow-scrolling: touch;
+        overflow-scrolling: touch;
+        overflow-x: hidden;
+        overflow-y: auto; /* 明示的に設定 */
+    }
+    
+    /* メインコンテナの調整 */
     .container {
         padding: 1rem;
         overflow-x: hidden;
+        overflow-y: visible; /* 重要: スクロールを許可 */
     }
     
     h1 {
@@ -960,13 +967,62 @@ button:hover::before {
         appearance: none;
     }
     
+    /* トレーニング計算フォームの調整 */
+    #training-calculator {
+        overflow: visible; /* スクロールを妨げない */
+    }
+    
+    /* トレーニングセクションコンテナの調整 */
+    #training-sections-container {
+        min-height: auto;
+        overflow: visible; /* スクロールを許可 */
+        /* transform を削除してスクロール問題を回避 */
+        will-change: auto;
+        transform: none;
+        -webkit-transform: none;
+    }
+    
     /* トレーニングセクションのスタイル調整 */
     .training-section {
-        touch-action: pan-y;
+        /* touch-action を完全に削除 */
         -webkit-user-select: none;
         user-select: none;
         padding: 0.75rem;
         margin-bottom: 0.75rem;
+        /* position: relative は維持 */
+    }
+    
+    /* 入力フィールドは通常のユーザー選択を許可 */
+    .training-section input[type="text"],
+    .training-section input[type="number"],
+    .training-section select,
+    .section-title-input {
+        -webkit-user-select: text !important;
+        user-select: text !important;
+        -webkit-touch-callout: default !important;
+        touch-action: manipulation; /* ダブルタップズームを防ぐ */
+    }
+    
+    /* フォームグループの調整 */
+    .form-group {
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* モバイルソートボタンの調整 */
+    .mobile-sort-btn {
+        touch-action: manipulation; /* タップのみ許可 */
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* 削除ボタンの調整 */
+    .remove-section-btn {
+        touch-action: manipulation;
+    }
+    
+    /* 追加ボタンの調整 */
+    .add-menu-btn {
+        touch-action: manipulation;
     }
     
     /* セクションタイトルコンテナの調整 */
@@ -1124,25 +1180,36 @@ button:hover::before {
     }
 }
 
-/* タッチデバイス専用スタイル */
+/* タッチデバイスでのスクロール最適化 */
 @media (hover: none) and (pointer: coarse) {
-    /* タップ領域の拡大 */
-    button,
+    /* ページ全体のスクロールを確実に有効化 */
+    html {
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    body {
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        position: relative;
+    }
+    
+    /* すべてのコンテナでスクロールを妨げない */
+    .container,
+    .card,
+    #training-calculator,
+    #training-sections-container {
+        overflow: visible;
+    }
+    
+    /* フォーム要素のタッチ操作を最適化 */
     input,
     select,
-    .mobile-sort-btn {
-        min-height: 44px;
-    }
-    
-    /* リンクやボタンのハイライト色を削除 */
-    * {
-        -webkit-tap-highlight-color: transparent;
-    }
-    
-    /* スクロール中の要素の固定 */
-    .training-section {
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
+    textarea,
+    button {
+        touch-action: manipulation;
     }
 }
 
@@ -1151,6 +1218,21 @@ input[data-focused="true"],
 select[data-focused="true"] {
     position: relative;
     z-index: 100;
+}
+
+/* iOS Safari特有の問題に対処 */
+@supports (-webkit-touch-callout: none) {
+    /* iOS Safariでのスクロール問題を修正 */
+    #training-sections-container {
+        -webkit-transform: none;
+        transform: none;
+        position: relative;
+    }
+    
+    .training-section {
+        -webkit-transform: none;
+        transform: none;
+    }
 }
 
 /* セーフエリア対応（iPhone X以降） */

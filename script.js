@@ -594,6 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeTabs();
     initializeTrainingForm();
     checkMetsDataLoaded();
+    fixMobileScroll();
 
     function initializeTabs() {
         console.log('タブ初期化');
@@ -605,6 +606,115 @@ document.addEventListener('DOMContentLoaded', () => {
             trainingTab.addEventListener('click', () => {
                 switchTab('training');
             });
+        }
+    }
+
+    // モバイルスクロール問題の修正
+    function fixMobileScroll() {
+        // タッチデバイスかどうかを確認
+        if (!('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
+            return;
+        }
+        
+        // トレーニングタブがアクティブな時のスクロール問題を修正
+        const trainingTab = document.getElementById('training-tab');
+        const trainingCalculator = document.getElementById('training-calculator');
+        const trainingSectionsContainer = document.getElementById('training-sections-container');
+        
+        if (trainingTab && trainingCalculator) {
+            // タブ切り替え時にスクロール設定をリセット
+            trainingTab.addEventListener('click', function() {
+                setTimeout(() => {
+                    // bodyのスクロールを確実に有効化
+                    document.body.style.overflow = 'auto';
+                    document.body.style.position = 'relative';
+                    document.body.style.height = 'auto';
+                    
+                    // コンテナのスクロールも有効化
+                    if (trainingSectionsContainer) {
+                        trainingSectionsContainer.style.overflow = 'visible';
+                        trainingSectionsContainer.style.height = 'auto';
+                        trainingSectionsContainer.style.minHeight = 'auto';
+                    }
+                    
+                    // iOSのスクロール問題を回避
+                    document.documentElement.style.overflow = 'auto';
+                    document.documentElement.style.height = 'auto';
+                }, 100);
+            });
+        }
+        
+        // タッチイベントの処理を改善
+        if (trainingSectionsContainer) {
+            let touchStartY = 0;
+            let touchEndY = 0;
+            
+            // タッチ開始時の処理
+            trainingSectionsContainer.addEventListener('touchstart', function(e) {
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+            
+            // タッチ移動時の処理
+            trainingSectionsContainer.addEventListener('touchmove', function(e) {
+                touchEndY = e.touches[0].clientY;
+                
+                // スクロール方向を検出
+                const scrollDirection = touchStartY - touchEndY;
+                
+                // ページ全体のスクロールを許可
+                if (Math.abs(scrollDirection) > 10) {
+                    e.stopPropagation();
+                }
+            }, { passive: true });
+        }
+        
+        // 入力フィールドのフォーカス時の処理
+        document.addEventListener('focusin', function(e) {
+            if (e.target.matches('input, select, textarea')) {
+                // フォーカス時もスクロールを維持
+                document.body.style.overflow = 'auto';
+                
+                // iOS Safariでキーボード表示時のスクロール問題を回避
+                setTimeout(() => {
+                    if (window.visualViewport) {
+                        const viewportHeight = window.visualViewport.height;
+                        const elementBottom = e.target.getBoundingClientRect().bottom;
+                        
+                        if (elementBottom > viewportHeight) {
+                            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                }, 300);
+            }
+        });
+        
+        // フォーカスが外れた時の処理
+        document.addEventListener('focusout', function(e) {
+            if (e.target.matches('input, select, textarea')) {
+                // スクロール位置を保持
+                const scrollY = window.scrollY;
+                
+                setTimeout(() => {
+                    window.scrollTo(0, scrollY);
+                    document.body.style.overflow = 'auto';
+                }, 100);
+            }
+        });
+    }
+
+    // タブ切り替え関数も修正（switchTab関数内に追加）
+    // switchTab関数の最後に以下を追加：
+    function switchTabWithScrollFix(tabName) {
+        // 既存のswitchTab処理...
+        
+        // モバイルでのスクロール問題を修正
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            setTimeout(() => {
+                document.body.style.overflow = 'auto';
+                document.body.style.position = 'relative';
+                document.body.style.height = 'auto';
+                window.scrollTo(0, window.scrollY);
+            }, 100);
         }
     }
 
