@@ -1,0 +1,955 @@
+:root {
+    --primary-color: #4a7bff;
+    --secondary-color: #2dd4bf;
+    --accent-color: #ffd166;
+    --background-color: #121420;
+    --dark-color: #1e1f2c;
+    --text-color: #e9eaec;
+    --card-bg: rgba(40, 42, 58, 0.8);
+    --input-bg: rgba(50, 52, 70, 0.8);
+    --border-radius: 8px;
+    --neon-glow: 0 0 5px rgba(74, 123, 255, 0.7), 0 0 10px rgba(74, 123, 255, 0.5), 0 0 15px rgba(74, 123, 255, 0.3);
+    --cyan-glow: 0 0 5px rgba(45, 212, 191, 0.7), 0 0 10px rgba(45, 212, 191, 0.5), 0 0 15px rgba(45, 212, 191, 0.3);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Rajdhani', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    background-image: 
+        linear-gradient(to right, rgba(45, 212, 191, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(45, 212, 191, 0.1) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, rgba(74, 123, 255, 0.15), transparent 70%);
+    background-size: 30px 30px, 30px 30px, 100% 100%;
+    position: relative;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    text-shadow: var(--neon-glow);
+    letter-spacing: 2px;
+    position: relative;
+}
+
+h1::before {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.7;
+    filter: blur(3px);
+    animation: glitch 2s infinite alternate-reverse;
+}
+
+@keyframes glitch {
+    0%, 100% { 
+        transform: translateX(0); 
+        text-shadow: var(--neon-glow);
+    }
+    25% { 
+        transform: translateX(-2px); 
+        text-shadow: var(--cyan-glow);
+    }
+    50% { 
+        transform: translateX(2px); 
+        text-shadow: 0 0 8px rgba(255, 255, 0, 0.7); 
+    }
+    75% { 
+        transform: translateX(-1px); 
+    }
+}
+
+.description {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.2rem;
+    color: var(--secondary-color);
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+}
+
+.card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(74, 123, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+    animation: scanline 2s linear infinite;
+}
+
+@keyframes scanline {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.card h2 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+    font-weight: 500;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+input[type="number"],
+input[type="text"],
+select {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: var(--input-bg);
+    border: 1px solid rgba(45, 212, 191, 0.3);
+    color: var(--text-color);
+    border-radius: var(--border-radius);
+    font-family: 'Rajdhani', sans-serif;
+    transition: all 0.3s ease;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.3);
+}
+
+.radio-group {
+    display: flex;
+    gap: 1rem;
+    margin: 0.5rem 0;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 0.8rem;
+    margin-top: 1rem;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: var(--border-radius);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+}
+
+button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s;
+}
+
+button:hover {
+    background-color: #3563d9;
+    box-shadow: 0 0 10px var(--primary-color), 0 0 20px rgba(74, 123, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+button:hover::before {
+    left: 100%;
+}
+
+.results-card {
+    display: none;
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    border: 1px solid rgba(45, 212, 191, 0.3);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.results-title {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+}
+
+.result-item {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: rgba(30, 30, 50, 0.6);
+    border-radius: var(--border-radius);
+}
+
+.result-label {
+    font-weight: 500;
+}
+
+.result-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    text-shadow: var(--neon-glow);
+}
+
+.pulse-once {
+    animation: pulse 0.5s ease;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); text-shadow: 0 0 20px var(--primary-color); }
+    100% { transform: scale(1); }
+}
+
+/* グリッチエフェクト */
+.glitch-container {
+    position: relative;
+}
+
+.glitch-active {
+    animation: glitch-anim 0.2s ease;
+}
+
+@keyframes glitch-anim {
+    0% { transform: translate(0); }
+    20% { transform: translate(-5px, 5px); }
+    40% { transform: translate(-5px, -5px); }
+    60% { transform: translate(5px, 5px); }
+    80% { transform: translate(5px, -5px); }
+    100% { transform: translate(0); }
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+}
+
+/* Add this for the scan line effect */
+.scan-line {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: rgba(0, 255, 255, 0.3);
+    z-index: 2;
+    animation: scanline-anim 3s linear infinite;
+}
+
+@keyframes scanline-anim {
+    0% { top: -10px; }
+    100% { top: 100vh; }
+}
+
+/* トレーニングセクション関連のスタイル */
+#training-sections-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    min-height: 150px;
+    padding: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+#training-sections-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px dashed transparent;
+    border-radius: var(--border-radius);
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+#training-sections-container:has(.dragging) {
+    background-color: rgba(45, 212, 191, 0.05);
+}
+
+#training-sections-container:has(.dragging)::after {
+    border-color: rgba(45, 212, 191, 0.3);
+}
+
+.training-section {
+    position: relative;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    background: rgba(20, 30, 40, 0.7);
+    border: 1px solid rgba(45, 212, 191, 0.3);
+    border-radius: var(--border-radius);
+    transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    width: 100%;
+}
+
+.training-section-handle {
+    position: absolute;
+    top: 0.8rem;
+    left: 0.8rem;
+    padding: 0.4rem;
+    background-color: rgba(45, 212, 191, 0.1);
+    border-radius: 4px;
+    cursor: grab;
+    opacity: 0.8;
+    transition: all 0.2s ease;
+}
+
+.training-section-handle:hover {
+    opacity: 1;
+    background-color: rgba(45, 212, 191, 0.2);
+    transform: scale(1.1);
+}
+
+.training-section-handle:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+.training-section-handle svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    color: var(--secondary-color);
+}
+
+.training-section.dragging {
+    opacity: 0.7;
+    transform: scale(1.02);
+    box-shadow: 0 0 15px var(--cyber-glow);
+    z-index: 100;
+}
+
+.training-section.drag-complete {
+    animation: dragComplete 0.5s ease;
+}
+
+@keyframes dragComplete {
+    0% {
+        border-color: var(--cyber-green);
+        box-shadow: 0 0 15px var(--cyber-green);
+    }
+    100% {
+        border-color: var(--cyber-accent);
+        box-shadow: none;
+    }
+}
+
+.training-section .section-title-container {
+    display: flex;
+    margin-left: 25px;
+    margin-bottom: 10px;
+}
+
+.training-section .section-title-input {
+    width: 100%;
+    padding: 8px 10px;
+    background: rgba(0, 15, 30, 0.5);
+    border: 1px solid var(--cyber-accent);
+    color: var(--cyber-text);
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 3px;
+}
+
+/* 詳細結果表示のスタイル */
+.details-item {
+    padding: 12px;
+    margin-bottom: 10px;
+    background: rgba(20, 30, 40, 0.7);
+    border: 1px solid var(--cyber-accent-secondary);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.details-item:hover {
+    border-color: var(--cyber-accent);
+    box-shadow: 0 0 8px rgba(var(--cyber-accent-rgb), 0.5);
+}
+
+.section-title {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--secondary-color);
+    margin: 0 0 1rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.add-section-container {
+    display: flex;
+    justify-content: center;
+    margin: 1.5rem 0;
+    width: 100%;
+}
+
+.add-section-btn {
+    background-color: rgba(45, 212, 191, 0.2);
+    border: 1px dashed var(--secondary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: auto;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.add-section-btn:hover {
+    background-color: rgba(45, 212, 191, 0.3);
+    box-shadow: 0 0 8px var(--secondary-color);
+}
+
+.section-remove-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    width: auto;
+    padding: 0.3rem;
+    margin: 0;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.section-remove-btn:hover {
+    opacity: 1;
+    background: none;
+    box-shadow: none;
+    transform: none;
+}
+
+.section-remove-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* 動的に追加された追加セクションのスタイル */
+.training-section[data-section-id^="additional-"] {
+    background-color: rgba(74, 123, 255, 0.05);
+    border: 1px solid rgba(74, 123, 255, 0.2);
+}
+
+/* トレーニングメニュー追加ボタンのスタイル */
+.add-menu-button-container {
+    display: flex;
+    justify-content: center;
+    margin: 1.5rem 0;
+}
+
+.add-menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    background: linear-gradient(135deg, rgba(45, 212, 191, 0.1), rgba(74, 123, 255, 0.1));
+    border: 1px solid var(--secondary-color);
+    color: var(--secondary-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    width: auto;
+    margin: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.add-menu-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(45, 212, 191, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.add-menu-btn:hover {
+    background: linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(74, 123, 255, 0.2));
+    box-shadow: var(--cyan-glow);
+    transform: translateY(-2px);
+}
+
+.add-menu-btn:hover::before {
+    left: 100%;
+}
+
+.add-menu-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+}
+
+/* 削除ボタンのスタイル */
+.remove-section-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, rgba(255, 77, 77, 0.1), rgba(255, 120, 120, 0.1));
+    border: 1px solid rgba(255, 77, 77, 0.5);
+    color: #ff4d4d;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 500;
+    width: auto;
+    margin: 0.5rem 0 0 0;
+    font-size: 0.9rem;
+}
+
+.remove-section-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 77, 77, 0.2), rgba(255, 120, 120, 0.2));
+    box-shadow: 0 0 5px rgba(255, 77, 77, 0.7), 0 0 10px rgba(255, 77, 77, 0.5), 0 0 15px rgba(255, 77, 77, 0.3);
+    transform: translateY(-1px);
+}
+
+.remove-section-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+}
+
+/* 詳細結果表示の調整 */
+#section-calories-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+#section-calories-container .details-item {
+    flex: 1;
+    min-width: 180px;
+    max-width: calc(33.333% - 0.67rem);
+    background-color: rgba(30, 30, 50, 0.5);
+    border: 1px solid rgba(45, 212, 191, 0.2);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+#section-calories-container .details-item:hover {
+    transform: translateY(-3px);
+    border-color: var(--secondary-color);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+#section-calories-container .details-item h4 {
+    color: #fff;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+}
+
+#section-calories-container .details-item p {
+    color: var(--secondary-color);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    text-shadow: 0 0 5px rgba(45, 212, 191, 0.4);
+    animation: number-glow 2s infinite;
+}
+
+@keyframes number-glow {
+    0% { text-shadow: 0 0 5px rgba(45, 212, 191, 0.3); }
+    50% { text-shadow: 0 0 10px rgba(45, 212, 191, 0.6); }
+    100% { text-shadow: 0 0 5px rgba(45, 212, 191, 0.3); }
+}
+
+@keyframes fade-in {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* 詳細結果タイトル */
+.details-title {
+    font-family: 'Orbitron', sans-serif;
+    margin: 1.5rem 0 1rem;
+    color: var(--secondary-color);
+    text-shadow: 0 0 5px rgba(45, 212, 191, 0.5);
+}
+
+@media (max-width: 768px) {
+    #section-calories-container {
+        flex-direction: row;
+    }
+    
+    #section-calories-container .details-item {
+        max-width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* 運動検索機能のスタイル */
+.activity-select-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.activity-search-input {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: var(--input-bg);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    color: var(--text-color);
+    border-radius: var(--border-radius);
+    font-family: 'Rajdhani', sans-serif;
+    transition: all 0.3s ease;
+    margin-bottom: 0.5rem;
+}
+
+.activity-search-input:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.3);
+}
+
+.activity-search-results {
+    position: absolute;
+    width: 100%;
+    max-height: 250px;
+    overflow-y: auto;
+    background-color: var(--card-bg);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    display: none;
+}
+
+.activity-result-item {
+    padding: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.activity-result-item:last-child {
+    border-bottom: none;
+}
+
+.activity-result-item:hover {
+    background-color: rgba(0, 255, 255, 0.1);
+}
+
+.activity-mets {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
+}
+
+/* スマホ向けスタイル調整 */
+@media (max-width: 768px) {
+    .activity-search-results {
+        max-height: 200px;
+    }
+}
+
+/* トレーニングメニュータイトル入力のスタイル */
+.section-title-container {
+    margin-bottom: 1rem;
+}
+
+.section-title-input {
+    width: 100%;
+    padding: 0.5rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: var(--secondary-color);
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(45, 212, 191, 0.3);
+    transition: all 0.3s ease;
+}
+
+.section-title-input:focus {
+    outline: none;
+    border-bottom-color: var(--secondary-color);
+    box-shadow: 0 2px 0 rgba(45, 212, 191, 0.5);
+}
+
+.section-title-input::placeholder {
+    color: rgba(45, 212, 191, 0.5);
+}
+
+/* 計算結果表示の改善 */
+#training-result-card {
+    background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(20, 20, 40, 0.95) 100%);
+    border: 2px solid var(--secondary-color);
+    box-shadow: 0 0 20px rgba(45, 212, 191, 0.3), 0 0 40px rgba(0, 0, 0, 0.5);
+    animation: result-appear 0.5s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes result-appear {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+#training-result-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+}
+
+#training-result-card h2 {
+    color: var(--secondary-color);
+    text-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
+    margin-bottom: 1.5rem;
+}
+
+#training-result-card .result-content {
+    margin-bottom: 2rem;
+}
+
+#training-result-card .result-item {
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(45, 212, 191, 0.3);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transform: scale(1);
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 5px rgba(45, 212, 191, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(45, 212, 191, 0.5); }
+    100% { box-shadow: 0 0 5px rgba(45, 212, 191, 0.3); }
+}
+
+#training-result-card .result-item h3 {
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+#total-calories-result {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    color: var(--secondary-color);
+    text-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
+    margin: 0;
+    animation: number-scale 0.5s ease-out;
+    text-align: center;
+}
+
+@keyframes number-scale {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.training-explanation {
+    background: rgba(30, 30, 50, 0.4);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* ハイライトフォーカスエフェクト */
+.highlight-focus {
+    animation: highlight-pulse 1s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); box-shadow: 0 0 25px rgba(45, 212, 191, 0.8); }
+    100% { transform: scale(1); }
+}
+
+/* タブとコンテンツの余白調整 */
+.main-tabs {
+    margin-bottom: 2rem;
+}
+
+.explanation-box {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* 新しい説明セクションのスタイル */
+.feature-section,
+.usage-section {
+    margin-top: 1.5rem;
+}
+
+.feature-section h4,
+.usage-section h4 {
+    color: var(--accent-color);
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+    text-shadow: 0 0 5px rgba(255, 209, 102, 0.4);
+}
+
+.feature-section ul,
+.usage-section ol {
+    margin-left: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.feature-section li,
+.usage-section li {
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    line-height: 1.4;
+}
+
+.feature-section li::marker {
+    color: var(--secondary-color);
+}
+
+.usage-section li::marker {
+    color: var(--secondary-color);
+}
+
+/* 説明ボックスのアイコンとコンテンツ */
+.explanation-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(74, 123, 255, 0.1), rgba(45, 212, 191, 0.1));
+    border: 1px solid rgba(74, 123, 255, 0.3);
+    border-radius: var(--border-radius);
+    position: relative;
+    overflow: hidden;
+}
+
+.explanation-icon {
+    flex-shrink: 0;
+    color: var(--primary-color);
+    padding: 0.5rem;
+    background: rgba(74, 123, 255, 0.2);
+    border-radius: 50%;
+}
+
+.explanation-content {
+    flex: 1;
+}
+
+.explanation-content h3 {
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.explanation-content p {
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.explanation-content p:last-of-type {
+    margin-bottom: 0;
+}
+
+.highlight {
+    color: var(--accent-color);
+    font-weight: 600;
+    text-shadow: 0 0 5px rgba(255, 209, 102, 0.4);
+} 
