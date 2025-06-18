@@ -1,7 +1,4 @@
-// ここから下はDOM Content Loadedの外に移動
-// METs情報の読み込みを確認するためのタイマー
-let metsDataCheckAttempts = 0;
-// グローバル変数として外に出す
+// グローバル変数
 let trainingSectionsContainer;
 let trainingSections;
 let sectionCaloriesContainer;
@@ -10,10 +7,12 @@ let draggedSection = null;
 let trainingResultCard;
 let totalCaloriesResult;
 let menuResults;
-// 既存のセクションIDを保持する配列
 let existingSectionIds = ['warmup', 'main', 'cooldown'];
-// トレーニングメニューごとの計算結果を保持する配列
 let sectionResults = [];
+let metsDataCheckAttempts = 0;
+
+// タッチデバイスかどうかを判定
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('tdee-form');
@@ -70,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { min: 75, max: 120, levels: [1.40, 1.70, null], descriptions: ["低い", "ふつう", ""] }
     ];
 
-    // 身体活動レベルの詳細な説明とわかりやすい例
+    // 身体活動レベルの詳細な説明
     const activityLevelDetails = {
         low: {
             title: "座っていることが多い生活",
@@ -113,9 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 目標カロリー計算の定数
-    const WEIGHT_LOSS_MIN_PERCENT = 0.10; // 10%減
-    const WEIGHT_LOSS_MAX_PERCENT = 0.20; // 20%減
-    const MUSCLE_GAIN_PERCENT = 0.075;    // 7.5%増
+    const WEIGHT_LOSS_MIN_PERCENT = 0.10;
+    const WEIGHT_LOSS_MAX_PERCENT = 0.20;
+    const MUSCLE_GAIN_PERCENT = 0.075;
 
     // 最初は結果カードと栄養素カードを非表示
     resultCard.style.display = 'none';
@@ -138,7 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateActivityLevels() {
         const age = parseInt(ageInput.value);
         
-        // 入力値のクリア
         activityLevelSelect.innerHTML = '';
         activityLevelDescription.textContent = '';
         activityLevelExamples.innerHTML = '';
@@ -151,17 +149,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // 年齢に対応する身体活動レベルを見つける
         const ageGroup = activityLevelsByAge.find(group => age >= group.min && age <= group.max);
         
         if (ageGroup) {
-            // デフォルトオプション
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
             defaultOption.textContent = '-- 選択してください --';
             activityLevelSelect.appendChild(defaultOption);
             
-            // 各レベルのオプションを追加
             ageGroup.levels.forEach((level, index) => {
                 if (level !== null) {
                     const option = document.createElement('option');
@@ -169,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const levelNumber = index + 1;
                     const levelName = ageGroup.descriptions[index];
                     
-                    // 活動レベルの説明を簡潔に
                     let levelTitle = "";
                     if (index === 0) levelTitle = activityLevelDetails.low.title;
                     else if (index === 1) levelTitle = activityLevelDetails.medium.title;
@@ -180,7 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             
-            // 年齢に応じた説明を追加
             let ageDescription = "";
             if (age < 12) {
                 ageDescription = ageGroupDescriptions.child;
@@ -200,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
             activityLevelSelect.appendChild(defaultOption);
         }
         
-        // 最初のオプションを選択
         if (activityLevelSelect.options.length > 1) {
             activityLevelSelect.selectedIndex = 1;
             activityLevelSelect.dispatchEvent(new Event('change'));
@@ -237,7 +229,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function calculateTDEE() {
-        // フォームからデータを取得
         const gender = document.querySelector('input[name="gender"]:checked').value;
         const age = parseFloat(document.getElementById('age').value);
         const weight = parseFloat(document.getElementById('weight').value);
@@ -245,7 +236,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const bodyFat = parseFloat(document.getElementById('body-fat').value) || null;
         const activityLevel = parseFloat(document.getElementById('activity-level').value);
 
-        // 入力値の検証
         if (isNaN(age) || isNaN(weight) || isNaN(height)) {
             alert('年齢、体重、身長には数値を入力してください。');
             return;
@@ -257,57 +247,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let bmr;
-
-        // 新しい計算式を使用
-        // ((0.1238+(0.0481×体重kg)+(0.0234×身長cm)-(0.0138×年齢)-性別*1))×1000/4.186
-        // 注）*1；男性=0.5473×1、女性=0.5473×2
         const genderFactor = gender === 'male' ? 0.5473 : 0.5473 * 2;
         bmr = ((0.1238 + (0.0481 * weight) + (0.0234 * height) - (0.0138 * age) - genderFactor)) * 1000 / 4.186;
 
-        // 1日あたりの総エネルギー消費量(TDEE)を計算
         const tdee = bmr * activityLevel;
         
-        // 目標カロリーの計算
-        // 体重減少: TDEEから10-20%減らす（平均値を表示）
-        const weightLossMinCal = tdee * (1 - WEIGHT_LOSS_MAX_PERCENT); // 20%減
-        const weightLossMaxCal = tdee * (1 - WEIGHT_LOSS_MIN_PERCENT); // 10%減
-        const weightLossCal = Math.round((weightLossMinCal + weightLossMaxCal) / 2); // 平均値
-        
-        // 筋肉増加: TDEEから7.5%増やす
+        const weightLossMinCal = tdee * (1 - WEIGHT_LOSS_MAX_PERCENT);
+        const weightLossMaxCal = tdee * (1 - WEIGHT_LOSS_MIN_PERCENT);
+        const weightLossCal = Math.round((weightLossMinCal + weightLossMaxCal) / 2);
         const muscleGainCal = Math.round(tdee * (1 + MUSCLE_GAIN_PERCENT));
-        
-        // 現状維持: TDEEそのまま
         const maintenanceCal = Math.round(tdee);
 
-        // 結果を表示
         bmrResult.textContent = `${Math.round(bmr)} kcal/日`;
         tdeeResult.textContent = `${maintenanceCal} kcal/日`;
         weightLossResult.textContent = `${weightLossCal} kcal/日`;
         maintenanceResult.textContent = `${maintenanceCal} kcal/日`;
         muscleGainResult.textContent = `${muscleGainCal} kcal/日`;
 
-        // 結果カードを表示
         resultCard.style.display = 'block';
         nutritionCard.style.display = 'block';
 
-        // 滑らかにスクロール
         resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-        // 結果表示時のアニメーション
         animateValue(bmrResult, 0, Math.round(bmr), 1000);
         animateValue(tdeeResult, 0, maintenanceCal, 1200);
         animateValue(weightLossResult, 0, weightLossCal, 1400);
         animateValue(maintenanceResult, 0, maintenanceCal, 1600);
         animateValue(muscleGainResult, 0, muscleGainCal, 1800);
 
-        // BMI情報の更新を追加
         updateBMIInfo(weight, height, age);
         
         // 結果セクションを表示
-        document.querySelector('.result-section').classList.add('visible');
+        const resultSection = document.querySelector('.result-section');
+        if (resultSection) {
+            resultSection.classList.add('visible');
+        }
     }
 
-    // 数値をアニメーションさせる関数
     function animateValue(element, start, end, duration) {
         const originalText = element.textContent;
         const unitText = originalText.replace(/[0-9-]/g, '').trim();
@@ -326,11 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.requestAnimationFrame(step);
     }
 
-    // 初期ページロード時のアニメーション
     function initializeAnimations() {
-        // フォームグループのアニメーションはCSSで処理
-        
-        // ボタンのアニメーション
         const calculateBtn = document.querySelector('.calculate-btn');
         calculateBtn.style.opacity = '0';
         calculateBtn.style.transform = 'translateY(20px)';
@@ -342,7 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 800);
     }
 
-    // ページロード時のアニメーションを初期化
     initializeAnimations();
 
     function calculateBMI(weight, height) {
@@ -378,7 +349,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getIdealWeight(height) {
-        // BMI 22を目標として理想体重を計算し、範囲を±10%とする
         const idealWeight = 22 * Math.pow(height / 100, 2);
         return {
             min: idealWeight * 0.9,
@@ -387,7 +357,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getAgeRangeBMI(age) {
-        // 年齢別の適正BMI範囲（一般的な目安）
         if (age < 18) {
             return { min: 18.5, max: 24 };
         } else if (age < 30) {
@@ -401,21 +370,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function getBMIScoreInfo() {
-        return 'BMIスコア: 18.5未満=低体重, 18.5-24.99=標準体重, 25-29.99=過体重, 30以上=肥満';
-    }
-
     function updateBMIInfo(weight, height, age) {
         const bmi = calculateBMI(weight, height);
         const bmiCategory = getBMICategory(bmi);
         const idealWeightRange = getIdealWeight(height);
         const ageRangeBMI = getAgeRangeBMI(age);
         
-        // BMI値と分類を表示
         document.querySelector('.bmi-current').textContent = bmi.toFixed(1);
         document.querySelector('.status-category').textContent = bmiCategory.name;
         
-        // ステータスインジケータの色を更新
         const statusIndicator = document.querySelector('.status-indicator');
         const statusContainer = document.querySelector('.status-category-container');
         const statusCategory = document.querySelector('.status-category');
@@ -424,15 +387,12 @@ document.addEventListener('DOMContentLoaded', () => {
         statusContainer.style.backgroundColor = `rgba(${bmiCategory.rgb}, 0.1)`;
         statusCategory.style.color = bmiCategory.color;
         
-        // 理想体重情報の更新
         document.querySelector('.ideal-min-value').textContent = idealWeightRange.min.toFixed(1);
         document.querySelector('.ideal-max-value').textContent = idealWeightRange.max.toFixed(1);
         document.querySelector('.current-weight-value').textContent = weight.toFixed(1);
         
-        // 年齢別の適正BMI範囲を表示
         document.querySelector('.age-range-bmi span').textContent = `${ageRangeBMI.min} - ${ageRangeBMI.max}`;
         
-        // レコメンデーションの更新
         updateBMIRecommendations(bmi, bmiCategory, weight, idealWeightRange, age);
     }
 
@@ -459,7 +419,6 @@ document.addEventListener('DOMContentLoaded', () => {
             recommendation = `BMIが${bmi.toFixed(1)}で肥満に分類されます。健康リスクを下げるために、約${weightDiff.toFixed(1)}kgの減量が推奨されます。医師や栄養士に相談しながら、健康的な食事と定期的な運動を心がけましょう。`;
         }
         
-        // 年齢に応じた追加アドバイス
         if (age < 18) {
             recommendation += ` なお、成長期の方は、BMIの評価は成人とは異なる場合があります。健全な成長のためにバランスの良い食事を心がけましょう。`;
         } else if (age >= 65) {
@@ -472,37 +431,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // タブ切り替え機能
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
-            // アクティブなタブをリセット
             tabButtons.forEach(btn => btn.classList.remove('active'));
-            // クリックされたタブをアクティブに
             button.classList.add('active');
-            // 対応するカテゴリの栄養素を表示
             const category = button.getAttribute('data-category');
             displayNutritionCategory(category);
         });
     });
 
-    // 栄養素情報を表示する関数
     function displayNutritionInfo() {
         const gender = document.querySelector('input[name="gender"]:checked').value;
         const age = parseFloat(document.getElementById('age').value);
         
-        // アクティブなタブを取得
         const activeTab = document.querySelector('.tab-button.active');
         const category = activeTab ? activeTab.getAttribute('data-category') : 'macronutrients';
         
-        // そのカテゴリの栄養素を表示
         displayNutritionCategory(category);
     }
 
-    // 特定のカテゴリの栄養素を表示する関数
     function displayNutritionCategory(category) {
         const gender = document.querySelector('input[name="gender"]:checked').value;
         const age = parseFloat(document.getElementById('age').value);
         
         if (isNaN(age)) return;
         
-        // ローディング表示
         nutritionContent.innerHTML = `
             <div class="nutrition-loading">
                 <div class="spinner"></div>
@@ -510,15 +461,12 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         
-        // 少し遅延を入れてローディングアニメーションを見せる
         setTimeout(() => {
-            // 選択されたカテゴリの栄養素リストを取得
             const nutrients = nutritionCategories[category].nutrients;
             
             let html = `<h3 class="nutrition-category-title">${nutritionCategories[category].name}</h3>`;
             html += `<div class="nutrition-cards">`;
             
-            // 各栄養素のカードを作成
             nutrients.forEach(nutrientKey => {
                 const nutrient = nutritionData[nutrientKey];
                 const ageGroup = getNutrientValueForAge(nutrient, age);
@@ -526,7 +474,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                    (gender === 'female' && nutrientKey === 'iron' && age >= 10 && age <= 64) ? 
                                    ageGroup.femaleWithMenstruation || ageGroup.female : ageGroup.female;
                 
-                // 栄養素のタイプに基づいてスタイルクラスを決定
                 let typeClass = '';
                 if (nutrient.type.includes('推奨量')) typeClass = 'recommended';
                 else if (nutrient.type.includes('目安量')) typeClass = 'adequate';
@@ -560,7 +507,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             nutritionContent.innerHTML = html;
             
-            // 値のアニメーション
             document.querySelectorAll('.value-number').forEach(el => {
                 const value = el.textContent;
                 if (value !== '-' && !value.startsWith('+')) {
@@ -573,43 +519,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
     }
 
-    // 年齢に対応する栄養素値を取得する関数
     function getNutrientValueForAge(nutrient, age) {
         let matchingValue = null;
         
-        // 妊娠中や授乳中の場合は特別な処理が必要になるため、今回は対象外とします
-        
-        // 年齢範囲からマッチする値を見つける
         for (const value of nutrient.values) {
             const ageRange = value.age;
             
-            // 特殊なケース（妊婦、授乳婦）をスキップ
             if (ageRange.includes('妊婦') || ageRange.includes('授乳婦')) continue;
             
-            // 年齢範囲を解析
             const match = ageRange.match(/(\d+)～(\d+)（([^）]+)）/);
             if (match) {
                 const minAge = parseInt(match[1]);
                 const maxAge = parseInt(match[2]);
                 const unit = match[3];
                 
-                // 月齢の処理
                 if (unit === '月') {
                     if (age < 1 && age * 12 >= minAge && age * 12 <= maxAge) {
                         matchingValue = value;
                         break;
                     }
-                } 
-                // 年齢の処理
-                else if (unit === '歳') {
+                } else if (unit === '歳') {
                     if (age >= minAge && age <= maxAge) {
                         matchingValue = value;
                         break;
                     }
                 }
-            }
-            // 「75以上（歳）」のような特殊なケース
-            else if (ageRange.includes('以上')) {
+            } else if (ageRange.includes('以上')) {
                 const match = ageRange.match(/(\d+)以上（([^）]+)）/);
                 if (match) {
                     const minAge = parseInt(match[1]);
@@ -621,11 +556,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // マッチする値が見つからない場合はデフォルト値を返す
         return matchingValue || { age: "不明", male: "-", female: "-" };
     }
 
-    // 栄養素アイコンを取得する関数
     function getNutrientIcon(nutrientKey) {
         const icons = {
             protein: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
@@ -660,11 +593,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 初期化処理
     initializeTabs();
     initializeTrainingForm();
-    
-    // METs情報のチェック処理を実行
     checkMetsDataLoaded();
 
-    // タブの初期化と切り替え機能の設定
     function initializeTabs() {
         console.log('タブ初期化');
         if (tdeeTab && trainingTab) {
@@ -675,28 +605,22 @@ document.addEventListener('DOMContentLoaded', () => {
             trainingTab.addEventListener('click', () => {
                 switchTab('training');
             });
-        } else {
-            console.error('タブ要素が見つかりません: tdeeTab=', tdeeTab, 'trainingTab=', trainingTab);
         }
     }
 
-    // タブ切り替え処理
     function switchTab(tabName) {
         console.log('タブ切り替え:', tabName);
         
         if (!tdeeTab || !trainingTab) {
-            console.error('タブ要素が未定義です: tdeeTab=', tdeeTab, 'trainingTab=', trainingTab);
+            console.error('タブ要素が未定義です');
             return;
         }
         
         if (!tdeeCalculator || !trainingCalculator) {
-            console.error('計算機要素が未定義です: tdeeCalculator=', tdeeCalculator, 'trainingCalculator=', trainingCalculator);
+            console.error('計算機要素が未定義です');
             return;
         }
         
-        console.log('タブ切り替え前の状態: tdeeTab.classList=', tdeeTab.classList, 'trainingTab.classList=', trainingTab.classList);
-        
-        // タブの切り替え
         if (tabName === 'tdee') {
             tdeeTab.classList.add('active');
             trainingTab.classList.remove('active');
@@ -705,18 +629,14 @@ document.addEventListener('DOMContentLoaded', () => {
             tdeeExplanation.style.display = 'block';
             trainingExplanation.style.display = 'none';
             
-            // TDEEの計算結果を表示（あれば）
             if (resultCard.style.display === 'block') {
                 resultCard.style.display = 'block';
                 nutritionCard.style.display = 'block';
             }
             
-            // トレーニング結果は非表示
             if (trainingResultCard) {
                 trainingResultCard.style.display = 'none';
             }
-            
-            console.log('TDEE計算タブに切り替えました');
         } else {
             tdeeTab.classList.remove('active');
             trainingTab.classList.add('active');
@@ -725,13 +645,10 @@ document.addEventListener('DOMContentLoaded', () => {
             tdeeExplanation.style.display = 'none';
             trainingExplanation.style.display = 'block';
             
-            // TDEEの計算結果を非表示
             resultCard.style.display = 'none';
             nutritionCard.style.display = 'none';
             
-            // トレーニング結果を表示（あれば）
             if (trainingResultCard) {
-                // 計算結果があれば表示する
                 if (trainingResultCard.getAttribute('data-has-results') === 'true' || 
                     (totalCaloriesResult && totalCaloriesResult.textContent && 
                     totalCaloriesResult.textContent !== '- kcal')) {
@@ -739,20 +656,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            // アクティビティセレクトボックスを初期化（即時実行）
             populateActivitySelects();
-            
-            console.log('トレーニング消費量タブに切り替えました');
         }
-        
-        console.log('タブ切り替え後の状態: tdeeTab.classList=', tdeeTab.classList, 'trainingTab.classList=', trainingTab.classList);
     }
 
-    // トレーニングフォームの初期化
     function initializeTrainingForm() {
         console.log('トレーニングフォーム初期化開始');
         
-        // トレーニングフォーム要素を取得
         const trainingFormElement = document.getElementById('training-form');
         
         if (!trainingFormElement) {
@@ -760,21 +670,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        console.log('トレーニングフォーム要素が見つかりました');
-        
-        // 既存のイベントリスナーを削除して再設定（重複防止）
-        const newForm = trainingFormElement.cloneNode(true);
-        trainingFormElement.parentNode.replaceChild(newForm, trainingFormElement);
-        
-        // 新しいフォームに対してイベントリスナーを設定
-        newForm.addEventListener('submit', function(e) {
+        // イベントリスナーを設定
+        trainingFormElement.addEventListener('submit', function(e) {
             e.preventDefault();
             console.log('トレーニングフォームのsubmitイベントが発火しました');
             calculateTrainingCalories();
         });
         
-        // 計算ボタンにもクリックイベントを追加（念のため）
-        const calculateBtn = newForm.querySelector('.calculate-btn');
+        const calculateBtn = trainingFormElement.querySelector('.calculate-btn');
         if (calculateBtn) {
             calculateBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -783,7 +686,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // トレーニングメニュー追加ボタンのイベントリスナーを設定
         const addMenuBtn = document.getElementById('add-training-menu-btn');
         if (addMenuBtn) {
             addMenuBtn.addEventListener('click', function(e) {
@@ -792,7 +694,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // 既存の削除ボタンのイベントリスナーを設定
         const existingRemoveBtns = document.querySelectorAll('.remove-section-btn');
         existingRemoveBtns.forEach(btn => {
             btn.addEventListener('click', function(e) {
@@ -802,13 +703,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         
-        // セクション管理関連の初期化
-        initDragAndDrop();
+        // モバイル向けドラッグ&ドロップ機能を初期化
+        if (isTouchDevice) {
+            initMobileDragAndDrop();
+        } else {
+            initDragAndDrop();
+        }
         
-        // トレーニングメニュー名の変更をリアルタイムで反映するための機能を初期化
         initMenuForm();
         
-        // METs情報が読み込まれていればセレクトボックスを初期化
         if (typeof metsData !== 'undefined' && metsData.activities && metsData.activities.length > 0) {
             populateActivitySelects();
         }
@@ -816,89 +719,141 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('トレーニングフォーム初期化完了');
     }
 
-    // ドラッグ&ドロップ機能の初期化
+    // モバイル向けドラッグ&ドロップ機能
+    function initMobileDragAndDrop() {
+        console.log('モバイル向けドラッグ&ドロップ機能を初期化');
+        
+        const container = document.getElementById('training-sections-container');
+        trainingSections = document.querySelectorAll('.training-section');
+        
+        // ドラッグハンドルを非表示にする
+        trainingSections.forEach(section => {
+            const handle = section.querySelector('.training-section-handle');
+            if (handle) {
+                handle.style.display = 'none';
+            }
+        });
+        
+        // 並び替えボタンを追加
+        addSortButtons();
+    }
+
+    // 並び替えボタンを追加する関数
+    function addSortButtons() {
+        const sections = document.querySelectorAll('.training-section');
+        
+        sections.forEach((section, index) => {
+            // 既存のボタンがある場合は削除
+            const existingButtons = section.querySelectorAll('.mobile-sort-btn');
+            existingButtons.forEach(btn => btn.remove());
+            
+            // ボタンコンテナを作成
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'mobile-sort-buttons';
+            
+            // 上に移動ボタン
+            if (index > 0) {
+                const upButton = document.createElement('button');
+                upButton.className = 'mobile-sort-btn sort-up-btn';
+                upButton.innerHTML = '↑';
+                upButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    moveSection(section, 'up');
+                });
+                buttonContainer.appendChild(upButton);
+            }
+            
+            // 下に移動ボタン
+            if (index < sections.length - 1) {
+                const downButton = document.createElement('button');
+                downButton.className = 'mobile-sort-btn sort-down-btn';
+                downButton.innerHTML = '↓';
+                downButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    moveSection(section, 'down');
+                });
+                buttonContainer.appendChild(downButton);
+            }
+            
+            // セクションタイトルの横にボタンを配置
+            const titleContainer = section.querySelector('.section-title-container');
+            if (titleContainer) {
+                titleContainer.appendChild(buttonContainer);
+            }
+        });
+    }
+
+    // セクションを移動する関数
+    function moveSection(section, direction) {
+        const container = document.getElementById('training-sections-container');
+        const sections = Array.from(container.querySelectorAll('.training-section'));
+        const currentIndex = sections.indexOf(section);
+        
+        if (direction === 'up' && currentIndex > 0) {
+            container.insertBefore(section, sections[currentIndex - 1]);
+        } else if (direction === 'down' && currentIndex < sections.length - 1) {
+            container.insertBefore(sections[currentIndex + 1], section);
+        }
+        
+        // ボタンを再配置
+        addSortButtons();
+        
+        // 結果表示の順序を更新
+        updateMenuResultsOrder();
+    }
+
+    // デスクトップ向けドラッグ&ドロップ機能（既存のコードを維持）
     function initDragAndDrop() {
         console.log('ドラッグ&ドロップ機能を初期化しています');
         const container = document.getElementById('training-sections-container');
         trainingSections = document.querySelectorAll('.training-section');
         
-        // スタイルを動的に追加
         addDragAndDropStyles();
         
         trainingSections.forEach(section => {
-            // セクション要素を取得
             const handle = section.querySelector('.training-section-handle');
             
-            // ドラッグハンドルのスタイルを強調して視覚的にドラッグ可能であることを示す
             if (handle) {
                 handle.style.cursor = 'grab';
                 handle.title = 'ドラッグしてメニューの順序を変更';
                 handle.classList.add('draggable-handle');
                 
-                // マウスイベントリスナー
                 handle.removeEventListener('mousedown', handleDragStart);
                 handle.addEventListener('mousedown', handleDragStart);
-                
-                // タッチデバイス用のイベントリスナー
-                handle.removeEventListener('touchstart', handleTouchStart);
-                handle.addEventListener('touchstart', handleTouchStart, { passive: false });
             }
         });
         
-        // コンテナのイベントリスナー
         if (container) {
-            // マウスイベント
             container.removeEventListener('dragover', handleDragOver);
             container.addEventListener('dragover', handleDragOver);
             
             container.removeEventListener('drop', handleDrop);
             container.addEventListener('drop', handleDrop);
-            
-            // モバイル用のドラッグエリア全体のイベント
-            container.removeEventListener('touchmove', handleTouchMove);
-            container.addEventListener('touchmove', handleTouchMove, { passive: false });
-            
-            container.removeEventListener('touchend', handleTouchEnd);
-            container.addEventListener('touchend', handleTouchEnd);
         }
         
-        // 画面外ドロップの対策としてdocumentにもイベントを設定
         document.removeEventListener('dragend', handleDragEnd);
         document.addEventListener('dragend', handleDragEnd);
     }
 
-    // ドラッグスタートハンドラー（ハンドル要素に対して）
     function handleDragStart(e) {
-        // ハンドルからセクション要素を見つける
         const section = this.closest('.training-section');
         if (!section) return;
         
-        // グローバル変数にドラッグ中のセクションを保存
         draggedSection = section;
-        
-        // スタイル変更
         this.style.cursor = 'grabbing';
-        
-        // ドラッグ操作のためにセクションをドラッグ可能に設定
         section.setAttribute('draggable', 'true');
         
-        // ドラッグ操作を開始
         section.ondragstart = function(event) {
             event.dataTransfer.effectAllowed = 'move';
-            // Firefoxでドラッグを開始するために必要
             event.dataTransfer.setData('text/plain', '');
-            
-            // ドラッグ中のスタイル
             section.classList.add('dragging');
             
-            // すべてのセクションのzインデックスをリセット
             const allSections = document.querySelectorAll('.training-section');
             allSections.forEach(s => {
                 s.style.zIndex = s === section ? '10' : '1';
             });
         };
         
-        // マウスアップリスナーを追加
         document.addEventListener('mouseup', function onMouseUp() {
             document.removeEventListener('mouseup', onMouseUp);
             if (section) {
@@ -910,98 +865,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // モバイル用タッチスタートハンドラー
-    function handleTouchStart(e) {
-        e.preventDefault(); // デフォルトのスクロール動作を防止
-        
-        const section = this.closest('.training-section');
-        if (!section) return;
-        
-        // グローバル変数にドラッグ中のセクションを保存
-        draggedSection = section;
-        
-        // ドラッグ中のスタイル
-        section.classList.add('dragging');
-        
-        // タッチ位置を記録
-        const touch = e.touches[0];
-        const startY = touch.clientY;
-        section.dataset.startY = startY;
-        section.dataset.startTop = section.offsetTop;
-        
-        // すべてのセクションのzインデックスをリセット
-        const allSections = document.querySelectorAll('.training-section');
-        allSections.forEach(s => {
-            s.style.zIndex = s === section ? '10' : '1';
-        });
-    }
-
-    // モバイル用タッチムーブハンドラー
-    function handleTouchMove(e) {
-        e.preventDefault(); // スクロールを防止
-        
-        if (!draggedSection) return;
-        
-        const touch = e.touches[0];
-        const currentY = touch.clientY;
-        const container = document.getElementById('training-sections-container');
-        
-        // ドラッグ位置に基づいて適切な位置にセクションを移動
-        const afterElement = getTouchAfterElement(container, currentY);
-        
-        if (afterElement == null) {
-            container.appendChild(draggedSection);
-        } else {
-            container.insertBefore(draggedSection, afterElement);
-        }
-    }
-
-    // モバイル用タッチ終了ハンドラー
-    function handleTouchEnd(e) {
-        if (!draggedSection) return;
-        
-        // ドラッグ終了のスタイルリセット
-        draggedSection.classList.remove('dragging');
-        draggedSection.removeAttribute('data-start-y');
-        draggedSection.removeAttribute('data-start-top');
-        
-        // ドラッグ&ドロップ後の視覚的フィードバック
-        const allSections = document.querySelectorAll('.training-section');
-        allSections.forEach(section => {
-            section.classList.add('drag-complete');
-            setTimeout(() => {
-                section.classList.remove('drag-complete');
-            }, 500);
-        });
-        
-        // 直ちに結果表示の順序を更新（遅延なし）
-        updateMenuResultsOrder();
-        
-        // グローバル変数をリセット
-        const finishedSection = draggedSection;
-        draggedSection = null;
-        
-        // 入力値を確実に保持するために、フォーカスを一度設定してから外す
-        const titleInput = finishedSection.querySelector('.section-title-input');
-        if (titleInput) {
-            // タイトル入力の状態を保存
-            const savedTitle = titleInput.value;
-            // 明示的に値を再設定して状態を確実に保存
-            setTimeout(() => {
-                titleInput.value = savedTitle;
-            }, 10);
-        }
-    }
-
-    // ドラッグ終了ハンドラー
     function handleDragEnd(e) {
         if (!draggedSection) return;
         
-        // ドラッグ終了時の処理
         draggedSection.classList.remove('dragging');
         draggedSection.setAttribute('draggable', 'false');
         
-        // ドラッグ&ドロップ後の視覚的フィードバック
         const allSections = document.querySelectorAll('.training-section');
         allSections.forEach(section => {
             section.classList.add('drag-complete');
@@ -1010,26 +879,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 500);
         });
         
-        // 直ちに結果表示の順序を更新（遅延なし）
         updateMenuResultsOrder();
         
-        // グローバル変数を一時保存してリセット
         const finishedSection = draggedSection;
         draggedSection = null;
         
-        // 入力値を確実に保持するために、フォーカスを一度設定してから外す
         const titleInput = finishedSection.querySelector('.section-title-input');
         if (titleInput) {
-            // タイトル入力の状態を保存
             const savedTitle = titleInput.value;
-            // 明示的に値を再設定して状態を確実に保存
             setTimeout(() => {
                 titleInput.value = savedTitle;
             }, 10);
         }
     }
 
-    // ドラッグオーバーハンドラー
     function handleDragOver(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
@@ -1046,7 +909,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ドロップハンドラー
     function handleDrop(e) {
         e.preventDefault();
         console.log('アイテムがドロップされました');
@@ -1057,16 +919,12 @@ document.addEventListener('DOMContentLoaded', () => {
             draggable.setAttribute('draggable', 'false');
         }
         
-        // ドロップ後のセクションの順序を更新
         updateMenuResultsOrder();
-        
-        // グローバル変数をリセット
         draggedSection = null;
         
         return false;
     }
 
-    // マウス位置に基づいて要素の挿入位置を決定
     function getDragAfterElement(container, y) {
         const draggableElements = [...container.querySelectorAll('.training-section:not(.dragging)')];
         
@@ -1082,31 +940,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
 
-    // タッチ位置に基づいて要素の挿入位置を決定（モバイル用）
-    function getTouchAfterElement(container, y) {
-        const draggableElements = [...container.querySelectorAll('.training-section:not(.dragging)')];
-        
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
-            }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
-
-    // ドラッグ&ドロップのスタイルを動的に追加
     function addDragAndDropStyles() {
-        // 既存のスタイル要素があれば削除
         const existingStyle = document.getElementById('drag-drop-styles');
         if (existingStyle) {
             existingStyle.remove();
         }
         
-        // 新しいスタイル要素を作成
         const styleEl = document.createElement('style');
         styleEl.id = 'drag-drop-styles';
         styleEl.textContent = `
@@ -1116,7 +955,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 padding: 4px;
                 margin: -4px;
                 transition: all 0.2s ease;
-                touch-action: none; /* タッチスクロールを防止 */
             }
             
             .draggable-handle:hover {
@@ -1133,7 +971,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
                 position: relative;
                 z-index: 1;
-                touch-action: pan-x; /* 縦スクロールのみ禁止 */
             }
             
             .training-section.dragging {
@@ -1153,41 +990,74 @@ document.addEventListener('DOMContentLoaded', () => {
                 50% { background-color: rgba(0, 150, 255, 0.2); }
                 100% { background-color: rgba(0, 150, 255, 0); }
             }
+            
+            /* モバイル向けソートボタンのスタイル */
+            .mobile-sort-buttons {
+                display: flex;
+                gap: 0.5rem;
+                margin-left: auto;
+            }
+            
+            .mobile-sort-btn {
+                width: 30px;
+                height: 30px;
+                padding: 0;
+                background-color: rgba(45, 212, 191, 0.2);
+                border: 1px solid var(--secondary-color);
+                color: var(--secondary-color);
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 16px;
+                font-weight: bold;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .mobile-sort-btn:hover,
+            .mobile-sort-btn:active {
+                background-color: rgba(45, 212, 191, 0.3);
+                transform: scale(1.1);
+            }
+            
+            @media (min-width: 769px) {
+                .mobile-sort-buttons {
+                    display: none;
+                }
+            }
+            
+            @media (max-width: 768px) {
+                .draggable-handle {
+                    display: none;
+                }
+            }
         `;
         
-        // スタイルをドキュメントに追加
         document.head.appendChild(styleEl);
     }
 
-    // トレーニングセクションを追加
-
-    // トレーニングセクションを削除
     function removeTrainingSection(sectionId) {
-        // デフォルトの3つのセクションは削除不可
         if (['warmup', 'main', 'cooldown'].includes(sectionId)) {
             alert('デフォルトのトレーニングメニューは削除できません。');
             return;
         }
         
-        // フォームからセクションを削除
         const sectionToRemove = document.querySelector(`.training-section[data-section-id="${sectionId}"]`);
         if (sectionToRemove) {
             sectionToRemove.remove();
         }
         
-        // 結果表示からも削除
         const resultItemToRemove = document.querySelector(`.details-item[data-section-id="${sectionId}"]`);
         if (resultItemToRemove) {
             resultItemToRemove.remove();
         }
         
-        // 既存IDリストからセクションIDを削除
         const index = existingSectionIds.indexOf(sectionId);
         if (index !== -1) {
             existingSectionIds.splice(index, 1);
         }
         
-        // 残りのセクションのタイトルを再番号付け（デフォルトタイトルの場合のみ）
         const sections = document.querySelectorAll('.training-section');
         sections.forEach((section, index) => {
             const titleInput = section.querySelector('.section-title-input');
@@ -1195,7 +1065,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const newTitle = `トレーニングメニュー${index + 1}`;
                 titleInput.value = newTitle;
                 
-                // 結果表示側のタイトルも更新
                 const sectionId = section.getAttribute('data-section-id');
                 const resultTitle = document.querySelector(`.training-menu-title[data-section-id="${sectionId}"]`);
                 if (resultTitle) {
@@ -1204,22 +1073,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // ドラッグ&ドロップを再初期化
-        initDragAndDrop();
+        // モバイルの場合はソートボタンを再配置
+        if (isTouchDevice) {
+            addSortButtons();
+        } else {
+            initDragAndDrop();
+        }
         
         console.log(`トレーニングメニューが削除されました: ${sectionId}`);
     }
 
-    // トレーニングメニューを追加する関数
     function addTrainingMenu() {
         additionalSectionCount++;
         const newSectionId = `menu-${additionalSectionCount}`;
         
-        // 現在のセクション数をカウント
         const currentSections = document.querySelectorAll('.training-section');
         const menuNumber = currentSections.length + 1;
         
-        // 新しいセクションHTML要素を作成
         const newSection = document.createElement('div');
         newSection.className = 'training-section';
         newSection.setAttribute('data-section-id', newSectionId);
@@ -1238,7 +1108,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <label for="${newSectionId}-activity">種類</label>
                 <select id="${newSectionId}-activity" name="${newSectionId}-activity" class="section-activity">
                     <option value="">-- 選択してください --</option>
-                    <!-- METs情報はJavaScriptで動的に追加されます -->
                 </select>
             </div>
             <div class="form-group">
@@ -1255,27 +1124,26 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         
-        // セクションコンテナに新しいセクションを追加
         const container = document.getElementById('training-sections-container');
         if (container) {
             container.appendChild(newSection);
         }
         
-        // 既存IDリストに新しいIDを追加
         existingSectionIds.push(newSectionId);
         
-        // METs情報が読み込まれていれば新しいセレクトボックスを初期化
         if (typeof metsData !== 'undefined' && metsData.activities && metsData.activities.length > 0) {
             populateActivitySelects();
         }
         
-        // ドラッグ&ドロップを再初期化
-        initDragAndDrop();
+        // モバイルの場合はソートボタンを追加
+        if (isTouchDevice) {
+            addSortButtons();
+        } else {
+            initDragAndDrop();
+        }
         
-        // メニューフォームイベントを再初期化
         initMenuForm();
         
-        // 削除ボタンのイベントリスナーを設定
         const removeBtn = newSection.querySelector('.remove-section-btn');
         if (removeBtn) {
             removeBtn.addEventListener('click', function(e) {
@@ -1285,7 +1153,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 新しく追加されたセクションに結果カードも追加
         if (sectionCaloriesContainer) {
             const resultItem = document.createElement('div');
             resultItem.className = 'details-item';
@@ -1300,42 +1167,38 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`新しいトレーニングメニューが追加されました: ${newSectionId}`);
     }
 
-    // METs情報をセレクトボックスに追加
     function populateActivitySelects() {
-        // 全活動オプションをプリロードして、検索入力でフィルタリングする実装
         const activitySelects = document.querySelectorAll('select.section-activity');
         if (activitySelects.length === 0) {
             console.warn('アクティビティセレクトボックスが見つかりません');
             return;
         }
         activitySelects.forEach(select => {
-            // オプションをリセット
             select.innerHTML = '';
-            // デフォルトオプション
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
             defaultOption.textContent = '-- 選択してください --';
             select.appendChild(defaultOption);
-            // 全活動をオプションとして追加
+            
             metsData.activities.forEach(activity => {
                 const option = document.createElement('option');
                 option.value = activity.description_ja;
                 option.textContent = `${activity.description_ja} (METs: ${activity.mets})`;
                 select.appendChild(option);
             });
-            // 検索入力フィールドをラップして追加（未追加の場合のみ）
+            
             if (!select.parentElement.classList.contains('activity-select-container')) {
                 const container = document.createElement('div');
                 container.className = 'activity-select-container';
                 select.parentNode.insertBefore(container, select);
                 container.appendChild(select);
-                // 検索入力
+                
                 const searchInput = document.createElement('input');
                 searchInput.type = 'text';
                 searchInput.className = 'activity-search-input';
                 searchInput.placeholder = '活動を検索...';
                 container.insertBefore(searchInput, select);
-                // 検索時にselectのオプションをフィルタリング
+                
                 searchInput.addEventListener('input', () => {
                     const term = searchInput.value.toLowerCase();
                     Array.from(select.options).forEach(opt => {
@@ -1350,9 +1213,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 活動名からMETs値を取得する関数
     function getMetsValueByActivityName(activityName) {
-        // 活動名からMETs値を取得
         if (typeof metsData !== 'undefined' && metsData.activities) {
             const activity = metsData.activities.find(a => a.description_ja === activityName);
             return activity ? activity.mets : null;
@@ -1362,32 +1223,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // トレーニング消費カロリーの計算
     function calculateTrainingCalories() {
         console.log('計算開始: calculateTrainingCalories()');
         
-        // 結果表示用の要素を再取得（念のため）
         if (!trainingResultCard) {
-            console.log('trainingResultCardが未初期化なので再取得します');
             trainingResultCard = document.getElementById('training-result-card');
         }
         
         if (!totalCaloriesResult) {
-            console.log('totalCaloriesResultが未初期化なので再取得します');
             totalCaloriesResult = document.getElementById('total-calories-result');
         }
         
         if (!menuResults) {
-            console.log('menuResultsが未初期化なので再取得します');
             menuResults = document.getElementById('menu-results');
         }
         
         if (!sectionCaloriesContainer) {
-            console.log('sectionCaloriesContainerが未初期化なので再取得します');
             sectionCaloriesContainer = document.getElementById('section-calories-container');
         }
         
-        // 計算に必要な値を取得
         const weightInput = document.getElementById('training-weight');
         if (!weightInput || !weightInput.value) {
             alert('体重を入力してください');
@@ -1400,12 +1254,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // トレーニングメニューの消費カロリーを計算
         let totalCalories = 0;
-        // 計算結果をグローバル変数にリセット
         sectionResults = [];
         
-        // 全てのセクションを処理
         const sections = document.querySelectorAll('.training-section');
         let hasValidInput = false;
         
@@ -1430,13 +1281,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             console.log(`- セクション ${index+1}: 種類=${activity}, 時間=${duration}`);
             
-            // このメニューに有効な入力がない場合はスキップ
             if (!activity || activity === '' || isNaN(duration) || duration <= 0) {
                 console.log(`- セクション ${index+1}: 入力が不完全なのでスキップします`);
                 return;
             }
             
-            // METs値を取得
             const metsValue = getMetsValueByActivityName(activity);
             if (!metsValue) {
                 alert(`${activity}のMETs値が見つかりませんでした`);
@@ -1444,11 +1293,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            // 有効な入力がある
             hasValidInput = true;
             console.log(`- セクション ${index+1}: 有効な入力です (METs=${metsValue})`);
             
-            // 消費カロリーを計算 (METs × 体重kg × 運動時間(時間) × 1.05)
             const durationHours = duration / 60;
             const calories = metsValue * weight * durationHours * 1.05;
             
@@ -1461,7 +1308,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         
-        // 有効な入力が1つもない場合はエラーメッセージを表示
         if (!hasValidInput) {
             alert('少なくとも1つのトレーニングメニューに種類と時間を入力してください');
             console.log('有効な入力が1つもありません');
@@ -1470,7 +1316,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         console.log(`計算完了: 総消費カロリー = ${Math.round(totalCalories)} kcal`);
         
-        // 計算結果を表示
         if (totalCaloriesResult) {
             totalCaloriesResult.textContent = `${Math.round(totalCalories)} kcal`;
             console.log('総消費カロリーを表示しました');
@@ -1478,13 +1323,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('総消費カロリー表示要素が見つかりません');
         }
         
-        // 各メニューの消費カロリーを表示
         updateSectionCalories();
-        
-        // 結果セクションの順序を更新
         updateMenuResultsOrder();
         
-        // 詳細結果セクションを表示
         if (menuResults) {
             menuResults.style.display = 'block';
             console.log('メニュー別結果を表示しました');
@@ -1492,14 +1333,12 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('メニュー別結果表示要素が見つかりません');
         }
         
-        // 結果カードを表示
         if (trainingResultCard) {
             console.log(`結果カード表示前の状態: ${trainingResultCard.style.display}`);
             trainingResultCard.style.display = 'block';
             trainingResultCard.setAttribute('data-has-results', 'true');
             console.log('結果カードを表示しました');
             
-            // 結果表示までスクロール
             trainingResultCard.scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
             console.error('結果カード表示要素が見つかりません (ID: training-result-card)');
@@ -1508,17 +1347,14 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('計算完了: 全ての表示処理が終了しました');
     }
 
-    // 各セクションの消費カロリーを更新する関数
     function updateSectionCalories() {
         console.log('各セクションの消費カロリーを更新します');
         
-        // 結果表示コンテナがなければ処理を終了
         if (!sectionCaloriesContainer) {
             console.error('セクションカロリーコンテナが見つかりません');
             return;
         }
         
-        // 各セクションの結果を更新
         sectionResults.forEach(result => {
             const caloriesElement = document.getElementById(`${result.id}-calories`);
             const titleElement = document.querySelector(`.training-menu-title[data-section-id="${result.id}"]`);
@@ -1537,14 +1373,12 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('各セクションの消費カロリー更新完了');
     }
 
-    // 計算結果の表示順序をトレーニングセクションの順序に合わせる
     function updateMenuResultsOrder() {
         console.log('メニュー結果の表示順序を更新します');
         const sectionsContainer = document.getElementById('training-sections-container');
         const sections = sectionsContainer.querySelectorAll('.training-section');
         const resultContainer = document.getElementById('section-calories-container');
         
-        // セクションIDと対応する結果表示要素のマップを作成
         const existingResultItems = {};
         resultContainer.querySelectorAll('.details-item').forEach(item => {
             const sectionId = item.getAttribute('data-section-id');
@@ -1553,17 +1387,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // セクションの順序に応じて結果表示要素の順序を調整
         sections.forEach((section, index) => {
             const sectionId = section.getAttribute('data-section-id');
             
-            // メニュータイトルの更新（トレーニングメニューX形式の場合のみ）
             const titleInput = section.querySelector('.section-title-input');
             if (titleInput && titleInput.value.startsWith('トレーニングメニュー')) {
                 const newTitle = `トレーニングメニュー${index + 1}`;
                 titleInput.value = newTitle;
                 
-                // 対応する結果表示のタイトルも更新
                 const resultItem = existingResultItems[sectionId];
                 if (resultItem) {
                     const titleElement = resultItem.querySelector('.training-menu-title');
@@ -1573,9 +1404,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            // ユーザーが変更したタイトルを反映（計算結果がない場合にも対応）
             if (titleInput) {
-                // 対応する結果表示のタイトルを更新
                 const resultItem = existingResultItems[sectionId];
                 if (resultItem) {
                     const titleElement = resultItem.querySelector('.training-menu-title');
@@ -1585,11 +1414,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            // 既存の結果表示要素があれば、その位置を調整
             if (existingResultItems[sectionId]) {
                 resultContainer.appendChild(existingResultItems[sectionId]);
             } else {
-                // 結果表示要素がない場合は新規作成（通常は計算前には表示されない）
                 console.log(`セクション ${sectionId} の結果表示要素を新規作成`);
                 createResultItemForSection(section, sectionId, resultContainer);
             }
@@ -1598,7 +1425,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('メニュー結果の表示順序を更新しました');
     }
 
-    // セクション用の結果表示要素を作成する関数
     function createResultItemForSection(section, sectionId, resultContainer) {
         const titleInput = section.querySelector('.section-title-input');
         const title = titleInput ? titleInput.value : 'トレーニングメニュー';
@@ -1615,7 +1441,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const caloriesElement = document.createElement('p');
         caloriesElement.id = `${sectionId}-calories`;
         
-        // グローバル変数に保存されている計算結果から該当するセクションの結果を探す
         const sectionResult = sectionResults.find(result => result.id === sectionId);
         if (sectionResult) {
             caloriesElement.textContent = `${sectionResult.calories} kcal`;
@@ -1630,66 +1455,66 @@ document.addEventListener('DOMContentLoaded', () => {
         return detailItem;
     }
 
-    // 新しいセクションを追加する関数
-
-    // 詳細計算フォームの初期化時にドラッグ＆ドロップ機能を初期化
     function initMenuForm() {
         console.log('メニューフォーム機能を初期化します');
-        // セクションのタイトルが変更されたときの処理
         document.querySelectorAll('.section-title-input').forEach(input => {
-            // input イベントリスナーを設定（リアルタイムで反映）
             input.removeEventListener('input', handleTitleInput);
             input.addEventListener('input', handleTitleInput);
             
-            // change イベントリスナーも設定（フォーカスが外れたときに確実に反映）
             input.removeEventListener('change', handleTitleChange);
             input.addEventListener('change', handleTitleChange);
+            
+            // モバイルでの入力問題を修正
+            input.addEventListener('focus', function() {
+                this.setAttribute('data-focused', 'true');
+            });
+            
+            input.addEventListener('blur', function() {
+                this.removeAttribute('data-focused');
+                // 入力値を確実に保存
+                const value = this.value;
+                setTimeout(() => {
+                    if (this.value !== value) {
+                        this.value = value;
+                    }
+                }, 100);
+            });
         });
         
-        // グローバルなinputイベントリスナーも設定（動的に追加される要素にも対応）
         document.removeEventListener('input', handleGlobalInput);
         document.addEventListener('input', handleGlobalInput);
         
         console.log('メニューフォーム機能の初期化が完了しました');
     }
 
-    // タイトル入力時のハンドラー
     function handleTitleInput(e) {
         if (!e.target.classList.contains('section-title-input')) return;
         
         const sectionId = e.target.getAttribute('data-section-id');
         const newTitle = e.target.value;
         
-        // 対応する結果表示のタイトルを更新
         updateMenuTitle(sectionId, newTitle);
     }
 
-    // タイトル変更時のハンドラー
     function handleTitleChange(e) {
         if (!e.target.classList.contains('section-title-input')) return;
         
         const sectionId = e.target.getAttribute('data-section-id');
         const newTitle = e.target.value;
         
-        // 対応する結果表示のタイトルを更新
         updateMenuTitle(sectionId, newTitle);
-        
-        // 計算結果配列のタイトルも更新
         updateSectionResultTitle(sectionId, newTitle);
     }
 
-    // グローバルinputイベントのハンドラー（動的に追加された要素に対応）
     function handleGlobalInput(e) {
         if (!e.target.classList.contains('section-title-input')) return;
         
         const sectionId = e.target.getAttribute('data-section-id');
         const newTitle = e.target.value;
         
-        // 対応する結果表示のタイトルを更新
         updateMenuTitle(sectionId, newTitle);
     }
 
-    // メニュータイトルを更新する関数
     function updateMenuTitle(sectionId, newTitle) {
         const titleElements = document.querySelectorAll(`.training-menu-title[data-section-id="${sectionId}"]`);
         titleElements.forEach(el => {
@@ -1697,7 +1522,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 計算結果配列内のタイトルを更新する関数
     function updateSectionResultTitle(sectionId, newTitle) {
         for (let i = 0; i < sectionResults.length; i++) {
             if (sectionResults[i].id === sectionId) {
@@ -1706,56 +1530,49 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
-    // ページ読み込み完了時の処理
-    document.addEventListener('DOMContentLoaded', function() {
-        // ... existing code ...
-        
-        // 詳細計算フォームの初期化
-        initMenuForm();
-        
-        // ... rest of the existing code ...
-    });
 });
-
-// METs情報の読み込みを確認するためのタイマー
-// let metsDataCheckAttempts = 0; // 重複定義のため削除
 
 function checkMetsDataLoaded() {
     if (typeof metsData !== 'undefined' && metsData.activities && metsData.activities.length > 0) {
         console.log('METs情報を検証: 正常に読み込まれました (' + metsData.activities.length + '件)');
-        
-        // METs情報が読み込まれたので、アクティビティセレクトを初期化
         populateActivitySelects();
-        
         return true;
     } else {
         metsDataCheckAttempts++;
-        if (metsDataCheckAttempts < 15) { // 最大15回まで試行
+        if (metsDataCheckAttempts < 15) {
             console.log('METs情報の読み込みを待機中... 試行回数: ' + metsDataCheckAttempts);
-            setTimeout(checkMetsDataLoaded, 500); // 500ms後に再試行
+            setTimeout(checkMetsDataLoaded, 500);
         } else {
             console.error('METs情報の読み込みに失敗しました。ページをリロードしてください。', typeof metsData);
             alert('運動データの読み込みに失敗しました。ページをリロードしてください。');
         }
-        
         return false;
     }
 }
 
-// ページロード完了後に実行
 window.addEventListener('load', function() {
     console.log('ページ読み込み完了：初期化処理を実行します');
     
-    // METs情報の読み込みを確認
     if (typeof metsData !== 'undefined' && metsData.activities && metsData.activities.length > 0) {
         console.log('METs情報：すでに読み込まれています');
-        populateActivitySelects();
+        if (typeof populateActivitySelects === 'function') {
+            populateActivitySelects();
+        }
     } else {
         console.log('METs情報：読み込みを待機します');
         checkMetsDataLoaded();
     }
     
-    // ドラッグ&ドロップ機能を初期化
-    initDragAndDrop();
-}); 
+    // モバイルデバイスの場合は、モバイル用の機能を初期化
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        const initMobileDragAndDrop = window.initMobileDragAndDrop;
+        if (typeof initMobileDragAndDrop === 'function') {
+            initMobileDragAndDrop();
+        }
+    } else {
+        const initDragAndDrop = window.initDragAndDrop;
+        if (typeof initDragAndDrop === 'function') {
+            initDragAndDrop();
+        }
+    }
+});

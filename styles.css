@@ -30,6 +30,8 @@ body {
     background-size: 30px 30px, 30px 30px, 100% 100%;
     position: relative;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
 }
 
 body::before {
@@ -165,7 +167,10 @@ select {
     color: var(--text-color);
     border-radius: var(--border-radius);
     font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
     transition: all 0.3s ease;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 input[type="number"]:focus,
@@ -205,6 +210,7 @@ button {
     position: relative;
     overflow: hidden;
     text-transform: uppercase;
+    -webkit-tap-highlight-color: transparent;
 }
 
 button::before {
@@ -277,7 +283,6 @@ button:hover::before {
     100% { transform: scale(1); }
 }
 
-/* グリッチエフェクト */
 .glitch-container {
     position: relative;
 }
@@ -295,18 +300,6 @@ button:hover::before {
     100% { transform: translate(0); }
 }
 
-/* レスポンシブデザイン */
-@media (max-width: 768px) {
-    .container {
-        padding: 1rem;
-    }
-    
-    h1 {
-        font-size: 2rem;
-    }
-}
-
-/* Add this for the scan line effect */
 .scan-line {
     position: fixed;
     top: 0;
@@ -333,6 +326,9 @@ button:hover::before {
     min-height: 150px;
     padding: 0.5rem;
     transition: all 0.3s ease;
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 
 #training-sections-container::after {
@@ -365,6 +361,9 @@ button:hover::before {
     border-radius: var(--border-radius);
     transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     width: 100%;
+    touch-action: pan-y;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .training-section-handle {
@@ -400,7 +399,7 @@ button:hover::before {
 .training-section.dragging {
     opacity: 0.7;
     transform: scale(1.02);
-    box-shadow: 0 0 15px var(--cyber-glow);
+    box-shadow: 0 0 15px var(--cyan-glow);
     z-index: 100;
 }
 
@@ -410,11 +409,11 @@ button:hover::before {
 
 @keyframes dragComplete {
     0% {
-        border-color: var(--cyber-green);
-        box-shadow: 0 0 15px var(--cyber-green);
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 15px var(--secondary-color);
     }
     100% {
-        border-color: var(--cyber-accent);
+        border-color: rgba(45, 212, 191, 0.3);
         box-shadow: none;
     }
 }
@@ -429,11 +428,13 @@ button:hover::before {
     width: 100%;
     padding: 8px 10px;
     background: rgba(0, 15, 30, 0.5);
-    border: 1px solid var(--cyber-accent);
-    color: var(--cyber-text);
+    border: 1px solid rgba(45, 212, 191, 0.3);
+    color: var(--text-color);
     font-size: 1rem;
     font-weight: 500;
     border-radius: 3px;
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 /* 詳細結果表示のスタイル */
@@ -441,14 +442,14 @@ button:hover::before {
     padding: 12px;
     margin-bottom: 10px;
     background: rgba(20, 30, 40, 0.7);
-    border: 1px solid var(--cyber-accent-secondary);
+    border: 1px solid rgba(45, 212, 191, 0.2);
     border-radius: 4px;
     transition: all 0.3s ease;
 }
 
 .details-item:hover {
-    border-color: var(--cyber-accent);
-    box-shadow: 0 0 8px rgba(var(--cyber-accent-rgb), 0.5);
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 8px rgba(45, 212, 191, 0.5);
 }
 
 .section-title {
@@ -508,12 +509,6 @@ button:hover::before {
 .section-remove-btn svg {
     width: 16px;
     height: 16px;
-}
-
-/* 動的に追加された追加セクションのスタイル */
-.training-section[data-section-id^="additional-"] {
-    background-color: rgba(74, 123, 255, 0.05);
-    border: 1px solid rgba(74, 123, 255, 0.2);
 }
 
 /* トレーニングメニュー追加ボタンのスタイル */
@@ -664,17 +659,6 @@ button:hover::before {
     text-shadow: 0 0 5px rgba(45, 212, 191, 0.5);
 }
 
-@media (max-width: 768px) {
-    #section-calories-container {
-        flex-direction: row;
-    }
-    
-    #section-calories-container .details-item {
-        max-width: 100%;
-        margin-bottom: 0.5rem;
-    }
-}
-
 /* 運動検索機能のスタイル */
 .activity-select-container {
     position: relative;
@@ -690,6 +674,7 @@ button:hover::before {
     color: var(--text-color);
     border-radius: var(--border-radius);
     font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
     transition: all 0.3s ease;
     margin-bottom: 0.5rem;
 }
@@ -732,13 +717,6 @@ button:hover::before {
     color: var(--secondary-color);
     font-size: 0.9rem;
     margin-left: 0.5rem;
-}
-
-/* スマホ向けスタイル調整 */
-@media (max-width: 768px) {
-    .activity-search-results {
-        max-height: 200px;
-    }
 }
 
 /* トレーニングメニュータイトル入力のスタイル */
@@ -952,4 +930,234 @@ button:hover::before {
     color: var(--accent-color);
     font-weight: 600;
     text-shadow: 0 0 5px rgba(255, 209, 102, 0.4);
-} 
+}
+
+/* モバイル対応の改善 */
+@media (max-width: 768px) {
+    /* コンテナの余白調整 */
+    .container {
+        padding: 1rem;
+        overflow-x: hidden;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    /* カードの余白とボーダー調整 */
+    .card {
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+    
+    /* フォーム要素の調整 */
+    input[type="number"],
+    input[type="text"],
+    select {
+        font-size: 16px;
+        padding: 0.75rem;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    
+    /* トレーニングセクションのスタイル調整 */
+    .training-section {
+        touch-action: pan-y;
+        -webkit-user-select: none;
+        user-select: none;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    /* セクションタイトルコンテナの調整 */
+    .section-title-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        margin-left: 0;
+    }
+    
+    /* セクションタイトル入力の調整 */
+    .section-title-input {
+        flex: 1;
+        font-size: 16px;
+        padding: 0.5rem;
+        -webkit-user-select: text;
+        user-select: text;
+    }
+    
+    /* フォーカス時のスタイル */
+    .section-title-input:focus,
+    input[type="number"]:focus,
+    input[type="text"]:focus,
+    select:focus {
+        position: relative;
+        z-index: 10;
+        transform: none;
+    }
+    
+    /* モバイルソートボタン */
+    .mobile-sort-buttons {
+        display: flex !important;
+        gap: 0.25rem;
+        margin-left: 0.5rem;
+    }
+    
+    .mobile-sort-btn {
+        width: 35px;
+        height: 35px;
+        min-width: 35px;
+        padding: 0;
+        background-color: rgba(45, 212, 191, 0.15);
+        border: 1px solid var(--secondary-color);
+        color: var(--secondary-color);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .mobile-sort-btn:active {
+        background-color: rgba(45, 212, 191, 0.3);
+        transform: scale(0.95);
+    }
+    
+    /* ドラッグハンドルを非表示 */
+    .training-section-handle {
+        display: none !important;
+    }
+    
+    /* 削除ボタンの調整 */
+    .remove-section-btn {
+        width: 100%;
+        margin-top: 0.5rem;
+        padding: 0.75rem;
+        font-size: 14px;
+    }
+    
+    /* 検索入力の調整 */
+    .activity-search-input {
+        font-size: 16px;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* セレクトボックスの調整 */
+    .section-activity {
+        font-size: 16px;
+        padding: 0.75rem;
+        background-color: var(--input-bg);
+        border: 1px solid rgba(45, 212, 191, 0.3);
+        color: var(--text-color);
+        -webkit-appearance: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2345d4bf' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 20px;
+        padding-right: 2.5rem;
+    }
+    
+    /* ボタンの調整 */
+    .cyber-btn {
+        padding: 0.75rem 1rem;
+        font-size: 14px;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .add-menu-btn {
+        padding: 0.75rem 1.25rem;
+        font-size: 14px;
+    }
+    
+    /* 計算結果カードの調整 */
+    #section-calories-container {
+        gap: 0.75rem;
+        flex-direction: row;
+    }
+    
+    #section-calories-container .details-item {
+        min-width: 150px;
+        max-width: 100%;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* タブボタンの調整 */
+    .main-tab-button {
+        padding: 0.75rem 1rem;
+        font-size: 14px;
+    }
+    
+    /* スクロール時のパフォーマンス改善 */
+    #training-sections-container {
+        will-change: transform;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+    }
+    
+    /* アニメーションの無効化（パフォーマンス向上） */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+    
+    .activity-search-results {
+        max-height: 200px;
+    }
+}
+
+/* デスクトップでモバイルボタンを非表示 */
+@media (min-width: 769px) {
+    .mobile-sort-buttons {
+        display: none;
+    }
+}
+
+/* タッチデバイス専用スタイル */
+@media (hover: none) and (pointer: coarse) {
+    /* タップ領域の拡大 */
+    button,
+    input,
+    select,
+    .mobile-sort-btn {
+        min-height: 44px;
+    }
+    
+    /* リンクやボタンのハイライト色を削除 */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* スクロール中の要素の固定 */
+    .training-section {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+    }
+}
+
+/* 入力フィールドのフォーカス時の固定 */
+input[data-focused="true"],
+select[data-focused="true"] {
+    position: relative;
+    z-index: 100;
+}
+
+/* セーフエリア対応（iPhone X以降） */
+@supports (padding: max(0px)) {
+    .container {
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+}
