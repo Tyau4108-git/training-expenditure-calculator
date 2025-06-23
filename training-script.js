@@ -71,7 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.documentElement.style.overflow = 'auto';
                     document.documentElement.style.height = 'auto';
                 }, 100);
-            });
+                // 既に選択されている値がある場合
+            if (select.value) {
+                searchInput.value = select.value;
+                clearButton.style.display = 'flex';
+                updateSelectedDisplay(selectedDisplay, select.value);
+            }
         }
         
         // タッチイベントの処理を改善
@@ -733,6 +738,9 @@ document.addEventListener('DOMContentLoaded', () => {
             let searchTimeout;
             let isResultsOpen = false;
             
+            // タッチデバイス用のフラグ
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            
             searchInput.addEventListener('input', (e) => {
                 clearTimeout(searchTimeout);
                 const searchTerm = e.target.value.trim();
@@ -757,6 +765,24 @@ document.addEventListener('DOMContentLoaded', () => {
             // 検索入力欄のフォーカス制御
             searchInput.addEventListener('focus', () => {
                 searchWrapper.classList.add('focused');
+                
+                // モバイルでのスクロール位置調整
+                if (isTouchDevice) {
+                    setTimeout(() => {
+                        const rect = searchWrapper.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        
+                        // 検索ボックスが画面の上部に来るようにスクロール
+                        if (rect.top > viewportHeight * 0.3) {
+                            const scrollTop = window.pageYOffset + rect.top - 100;
+                            window.scrollTo({
+                                top: scrollTop,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }, 300);
+                }
+                
                 if (searchInput.value.trim().length > 0 && !select.value) {
                     const results = searchActivities(searchInput.value.trim());
                     displaySearchResults(results, searchResults, select, searchInput, selectedDisplay);
@@ -766,27 +792,65 @@ document.addEventListener('DOMContentLoaded', () => {
             
             searchInput.addEventListener('blur', () => {
                 searchWrapper.classList.remove('focused');
+                
+                // モバイルでの検索結果を閉じるタイミングを遅延
+                if (isTouchDevice) {
+                    setTimeout(() => {
+                        if (!container.contains(document.activeElement)) {
+                            searchResults.style.display = 'none';
+                            isResultsOpen = false;
+                        }
+                    }, 200);
+                }
             });
             
-            // クリック外で検索結果を閉じる
+            // クリック外で検索結果を閉じる（改善版）
             document.addEventListener('click', (e) => {
-                if (!container.contains(e.target) && isResultsOpen) {
-                    searchResults.style.display = 'none';
-                    isResultsOpen = false;
-                    
-                    // z-indexをリセット
-                    const parentSection = container.closest('.training-section');
-                    if (parentSection) {
-                        parentSection.style.zIndex = '1';
+                // タッチデバイスでは遅延を設ける
+                if (isTouchDevice) {
+                    setTimeout(() => {
+                        if (!container.contains(e.target) && isResultsOpen) {
+                            searchResults.style.display = 'none';
+                            isResultsOpen = false;
+                            
+                            // z-indexをリセット
+                            const parentSection = container.closest('.training-section');
+                            if (parentSection) {
+                                parentSection.style.zIndex = '1';
+                            }
+                        }
+                    }, 100);
+                } else {
+                    if (!container.contains(e.target) && isResultsOpen) {
+                        searchResults.style.display = 'none';
+                        isResultsOpen = false;
+                        
+                        // z-indexをリセット
+                        const parentSection = container.closest('.training-section');
+                        if (parentSection) {
+                            parentSection.style.zIndex = '1';
+                        }
                     }
                 }
             });
             
-            // 既に選択されている値がある場合
-            if (select.value) {
-                searchInput.value = select.value;
-                clearButton.style.display = 'flex';
-                updateSelectedDisplay(selectedDisplay, select.value);
+            // タッチイベントの追加（モバイル専用）
+            if (isTouchDevice) {
+                // 検索結果のタッチスクロールを改善
+                searchResults.addEventListener('touchstart', (e) => {
+                    // スクロール可能な要素でのタッチを許可
+                    e.stopPropagation();
+                }, { passive: true });
+                
+                // 検索入力欄のタッチ処理
+                searchInput.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                }, { passive: true });
+                
+                // クリアボタンのタッチ処理
+                clearButton.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                }, { passive: true });
             }
         });
     }
@@ -990,10 +1054,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         </svg>
                     `;
                     
-                    resultItem.addEventListener('click', () => {
+                    resultItem.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
                         selectElement.value = result.activity.description_ja;
                         searchInput.value = result.activity.description_ja;
-                        resultsContainer.style.display = 'none';
                         
                         // 選択された値を表示
                         updateSelectedDisplay(selectedDisplay, result.activity.description_ja, result.activity.mets);
@@ -1010,14 +1076,31 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         // アニメーション
                         resultItem.classList.add('selected');
-                        setTimeout(() => {
-                            resultsContainer.style.display = 'none';
-                            // z-indexをリセット
-                            const parentSection = resultsContainer.closest('.training-section');
-                            if (parentSection) {
-                                parentSection.style.zIndex = '1';
-                            }
-                        }, 200);
+                        
+                        // モバイルでの処理
+                        if (isTouchDevice) {
+                            // フォーカスを外す
+                            searchInput.blur();
+                            
+                            // キーボードを閉じる時間を確保
+                            setTimeout(() => {
+                                resultsContainer.style.display = 'none';
+                                // z-indexをリセット
+                                const parentSection = resultsContainer.closest('.training-section');
+                                if (parentSection) {
+                                    parentSection.style.zIndex = '1';
+                                }
+                            }, 100);
+                        } else {
+                            setTimeout(() => {
+                                resultsContainer.style.display = 'none';
+                                // z-indexをリセット
+                                const parentSection = resultsContainer.closest('.training-section');
+                                if (parentSection) {
+                                    parentSection.style.zIndex = '1';
+                                }
+                            }, 200);
+                        }
                     });
                     
                     resultsContainer.appendChild(resultItem);

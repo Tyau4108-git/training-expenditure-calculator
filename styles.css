@@ -1275,6 +1275,21 @@ select[data-focused="true"] {
         -webkit-transform: none;
         transform: none;
     }
+    
+    /* 検索結果のposition調整 */
+    @media (max-width: 768px) {
+        .activity-search-results {
+            position: absolute; /* iOSではabsoluteに戻す */
+        }
+    }
+    
+    /* 入力フィールドのスタイル調整 */
+    .activity-search-input {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        font-size: 16px; /* ズーム防止 */
+    }
 }
 
 /* セーフエリア対応（iPhone X以降） */
