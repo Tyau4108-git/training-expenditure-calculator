@@ -362,6 +362,12 @@ button:hover::before {
     /* touch-action: pan-y を削除 */
     -webkit-user-select: none;
     user-select: none;
+    z-index: 1; /* 追加：基本のz-indexを低く設定 */
+}
+
+/* 検索結果が開いているコンテナを最前面に */
+.training-section:has(.activity-search-results[style*="display: block"]) {
+    z-index: 500; /* 追加：検索結果が開いている時は前面に */
 }
 
 .training-section-handle {
@@ -657,7 +663,7 @@ button:hover::before {
     text-shadow: 0 0 5px rgba(45, 212, 191, 0.5);
 }
 
-/* 運動検索機能のスタイル */
+/* 運動検索機能のスタイル（修正版） */
 .activity-select-container {
     position: relative;
     width: 100%;
@@ -686,21 +692,26 @@ button:hover::before {
 .activity-search-results {
     position: absolute;
     width: 100%;
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
     background-color: var(--card-bg);
     border: 1px solid rgba(0, 255, 255, 0.3);
     border-radius: var(--border-radius);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
     display: none;
+    margin-top: 0.5rem;
+    backdrop-filter: blur(10px);
 }
 
 .activity-result-item {
-    padding: 0.8rem;
+    padding: 0.8rem 1rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .activity-result-item:last-child {
@@ -708,13 +719,44 @@ button:hover::before {
 }
 
 .activity-result-item:hover {
-    background-color: rgba(0, 255, 255, 0.1);
+    background-color: rgba(0, 255, 255, 0.15);
+    transform: translateX(5px);
+    border-left: 3px solid var(--secondary-color);
 }
 
 .activity-mets {
     color: var(--secondary-color);
-    font-size: 0.9rem;
-    margin-left: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    text-shadow: 0 0 5px rgba(45, 212, 191, 0.3);
+}
+
+.no-results {
+    padding: 1rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+}
+
+/* 検索結果のスクロールバー */
+.activity-search-results::-webkit-scrollbar {
+    width: 8px;
+}
+
+.activity-search-results::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+}
+
+.activity-search-results::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 4px;
+    opacity: 0.8;
+}
+
+.activity-search-results::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
 }
 
 /* トレーニングメニュータイトル入力のスタイル */
