@@ -1032,6 +1032,42 @@ button:hover::before {
         padding: 0.75rem;
         margin-bottom: 0.75rem;
         /* position: relative は維持 */
+        overflow: visible; /* 追加: オーバーフローを表示 */
+    }
+    
+    /* 検索結果が開いているセクションの処理 */
+    .training-section:has(.activity-search-results[style*="display: block"]) {
+        z-index: 9999 !important; /* モバイルでは最大値に */
+        margin-bottom: 250px; /* 検索結果分のスペースを確保 */
+    }
+    
+    /* 検索結果コンテナのモバイル対応 */
+    .activity-search-results {
+        position: fixed !important; /* モバイルでは固定位置に変更 */
+        left: 1rem !important;
+        right: 1rem !important;
+        top: auto !important;
+        bottom: 20% !important; /* 画面下部から20%の位置 */
+        max-height: 60vh !important; /* ビューポートの60% */
+        width: auto !important;
+        z-index: 99999 !important; /* 最前面に */
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(45, 212, 191, 0.2) inset !important;
+    }
+    
+    /* 検索中の画面調整 */
+    body:has(.activity-search-results[style*="display: block"]) {
+        padding-bottom: 300px; /* 検索結果分のパディングを追加 */
+    }
+    
+    /* フォームグループのz-index調整 */
+    .form-group {
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* 検索を含むフォームグループ */
+    .form-group:has(.activity-select-container) {
+        z-index: auto !important; /* モバイルでは自動に */
     }
     
     /* 入力フィールドは通常のユーザー選択を許可 */
@@ -1043,13 +1079,32 @@ button:hover::before {
         user-select: text !important;
         -webkit-touch-callout: default !important;
         touch-action: manipulation; /* ダブルタップズームを防ぐ */
+        position: relative;
+        z-index: 1; /* 基本のz-index */
     }
     
-    /* フォームグループの調整 */
-    .form-group {
-        position: relative;
-        z-index: 1;
+    /* 検索入力ラッパーの調整 */
+    .search-input-wrapper {
+        z-index: 10;
     }
+    
+    /* 検索アクティブ時のオーバーレイ */
+    .search-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9998;
+    }
+    
+    body:has(.activity-search-results[style*="display: block"]) .search-overlay {
+        display: block;
+    }
+    
+    /* その他の既存のモバイルスタイル... */
     
     /* モバイルソートボタンの調整 */
     .mobile-sort-btn {

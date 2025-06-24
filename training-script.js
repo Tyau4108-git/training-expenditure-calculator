@@ -664,16 +664,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 select.appendChild(option);
             });
             
-            // セレクトボックスを完全に非表示にする（モバイル対応）
-            select.style.position = 'absolute';
-            select.style.left = '-9999px';
-            select.style.top = '-9999px';
-            select.style.width = '1px';
-            select.style.height = '1px';
-            select.style.opacity = '0';
-            select.style.pointerEvents = 'none';
-            select.setAttribute('tabindex', '-1');
-            select.setAttribute('aria-hidden', 'true');
+            // セレクトボックスを非表示にする
+            select.style.display = 'none';
             
             const container = document.createElement('div');
             container.className = 'activity-select-container';
@@ -737,25 +729,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchInput.focus();
             });
             
-            // モバイルデバイスかどうかを確認
-            const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
-            
             // 検索機能の実装
             let searchTimeout;
             let isResultsOpen = false;
             
-            // モバイルでの仮想キーボード対策
-            if (isMobile) {
-                searchInput.addEventListener('focus', (e) => {
-                    e.preventDefault();
-                    setTimeout(() => {
-                        searchInput.focus();
-                        // スクロール位置を調整
-                        const rect = searchInput.getBoundingClientRect();
-                        if (rect.bottom > window.innerHeight * 0.5) {
-                            searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                    }, 100);
+            // モバイル用オーバーレイの作成
+            let searchOverlay = document.querySelector('.search-overlay');
+            if (!searchOverlay && isTouchDevice) {
+                searchOverlay = document.createElement('div');
+                searchOverlay.className = 'search-overlay';
+                document.body.appendChild(searchOverlay);
+                
+                searchOverlay.addEventListener('click', () => {
+                    searchResults.style.display = 'none';
+                    isResultsOpen = false;
+                    searchOverlay.style.display = 'none';
+                    
+                    // z-indexをリセット
+                    const parentSection = container.closest('.training-section');
+                    if (parentSection) {
+                        parentSection.style.zIndex = '1';
+                        parentSection.style.marginBottom = '';
+                    }
                 });
             }
             
@@ -769,6 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (searchTerm.length === 0) {
                     searchResults.style.display = 'none';
                     isResultsOpen = false;
+                    if (searchOverlay) searchOverlay.style.display = 'none';
                     return;
                 }
                 
@@ -777,6 +773,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const results = searchActivities(searchTerm);
                     displaySearchResults(results, searchResults, select, searchInput, selectedDisplay);
                     isResultsOpen = true;
+                    
+                    // モバイルでオーバーレイ表示
+                    if (searchOverlay && isTouchDevice) {
+                        searchOverlay.style.display = 'block';
+                    }
                 }, 300);
             });
             
@@ -1042,6 +1043,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             const parentSection = resultsContainer.closest('.training-section');
                             if (parentSection) {
                                 parentSection.style.zIndex = '1';
+                                parentSection.style.marginBottom = '';
+                            }
+                            
+                            // モバイルでオーバーレイを非表示
+                            const searchOverlay = document.querySelector('.search-overlay');
+                            if (searchOverlay && isTouchDevice) {
+                                searchOverlay.style.display = 'none';
                             }
                         }, 200);
                     });
