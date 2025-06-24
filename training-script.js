@@ -783,12 +783,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         searchResults.style.width = '';
                         searchResults.style.maxHeight = '';
                     }
-                    
-                    // z-indexをリセット
-                    const parentSection = container.closest('.training-section');
-                    if (parentSection) {
-                        parentSection.style.zIndex = '1';
-                    }
                 }
             });
             
@@ -931,20 +925,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // モバイルデバイスかチェック
         const isMobile = window.innerWidth <= 768;
         
-        // 親要素のz-indexを管理
-        const parentSection = resultsContainer.closest('.training-section');
-        const allSections = document.querySelectorAll('.training-section');
-        
-        // すべてのセクションのz-indexをリセット
-        allSections.forEach(section => {
-            section.style.zIndex = '1';
-        });
-        
-        // 現在のセクションを最前面に
-        if (parentSection) {
-            parentSection.style.zIndex = '500';
-        }
-        
         // モバイルの場合、検索結果の位置を調整
         if (isMobile) {
             const searchInput = resultsContainer.previousElementSibling.querySelector('.activity-search-input');
@@ -959,7 +939,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 resultsContainer.style.right = '1rem';
                 resultsContainer.style.width = 'auto';
                 resultsContainer.style.maxHeight = `${window.innerHeight - rect.bottom - 20}px`;
+                resultsContainer.style.zIndex = '99999';
             }
+        } else {
+            // デスクトップの場合は通常の配置
+            resultsContainer.style.position = '';
+            resultsContainer.style.top = '';
+            resultsContainer.style.left = '';
+            resultsContainer.style.right = '';
+            resultsContainer.style.width = '';
+            resultsContainer.style.maxHeight = '';
+            resultsContainer.style.zIndex = '';
         }
         
         if (results.length === 0) {
@@ -1051,12 +1041,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 resultsContainer.style.right = '';
                                 resultsContainer.style.width = '';
                                 resultsContainer.style.maxHeight = '';
-                            }
-                            
-                            // z-indexをリセット
-                            const parentSection = resultsContainer.closest('.training-section');
-                            if (parentSection) {
-                                parentSection.style.zIndex = '1';
                             }
                         }, 200);
                     });

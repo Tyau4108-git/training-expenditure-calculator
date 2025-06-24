@@ -325,10 +325,9 @@ button:hover::before {
     gap: 1rem;
     margin-bottom: 1.5rem;
     position: relative;
-    min-height: auto; /* 150pxから変更 */
+    min-height: auto;
     padding: 0.5rem;
     transition: all 0.3s ease;
-    /* touch-action を削除 */
 }
 
 #training-sections-container::after {
@@ -361,15 +360,16 @@ button:hover::before {
     border-radius: var(--border-radius);
     transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     width: 100%;
-    /* touch-action: pan-y を削除 */
     -webkit-user-select: none;
     user-select: none;
-    z-index: 1; /* 追加：基本のz-indexを低く設定 */
+    z-index: 1;
 }
 
 /* 検索結果が開いているコンテナを最前面に */
 .training-section:has(.activity-search-results[style*="display: block"]) {
-    z-index: 500; /* 追加：検索結果が開いている時は前面に */
+    z-index: 500;
+    /* 背景を暗くしない */
+    background: rgba(20, 30, 40, 0.7) !important;
 }
 
 /* フォームグループのz-index管理 */
@@ -713,7 +713,7 @@ button:hover::before {
     width: 100%;
     max-height: 300px;
     overflow-y: auto;
-    background-color: var(--card-bg);
+    background-color: rgba(40, 42, 58, 0.98);
     border: 1px solid rgba(0, 255, 255, 0.3);
     border-radius: var(--border-radius);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -1088,6 +1088,12 @@ button:hover::before {
     .training-section .form-group input[type="number"],
     .training-section .form-group input[type="text"] {
         background-color: rgba(50, 52, 70, 1) !important;
+        opacity: 1 !important;
+    }
+    
+    /* 検索時にセクション全体が暗くならないように */
+    .training-section:has(.activity-search-results[style*="display: block"]) {
+        filter: none !important;
         opacity: 1 !important;
     }
     
