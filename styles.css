@@ -1102,6 +1102,8 @@ button:hover::before {
         bottom: auto !important;
         margin-top: 0.5rem;
         z-index: 99999 !important; /* 最前面に確実に表示 */
+        background-color: rgba(40, 42, 58, 0.98) !important; /* より不透明に */
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important; /* 影を強化 */
     }
     
     /* 検索コンテナの調整 */
@@ -1110,17 +1112,19 @@ button:hover::before {
         z-index: auto;
     }
     
-    /* 検索結果が開いている時の背景オーバーレイ */
-    .training-section:has(.activity-search-results[style*="display: block"])::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 99998;
-        pointer-events: none;
+    /* 検索結果が開いている時の背景オーバーレイ - デスクトップのみ */
+    @media (min-width: 769px) {
+        .training-section:has(.activity-search-results[style*="display: block"])::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99998;
+            pointer-events: none;
+        }
     }
     
     /* 検索結果が開いている時、他のフォーム要素を確実に背景に */
