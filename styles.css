@@ -6,7 +6,7 @@
     --dark-color: #1e1f2c;
     --text-color: #e9eaec;
     --card-bg: rgba(40, 42, 58, 0.8);
-    --input-bg: rgba(50, 52, 70, 0.8);
+    --input-bg: rgba(50, 52, 70, 0.95);
     --border-radius: 8px;
     --neon-glow: 0 0 5px rgba(74, 123, 255, 0.7), 0 0 10px rgba(74, 123, 255, 0.5), 0 0 15px rgba(74, 123, 255, 0.3);
     --cyan-glow: 0 0 5px rgba(45, 212, 191, 0.7), 0 0 10px rgba(45, 212, 191, 0.5), 0 0 15px rgba(45, 212, 191, 0.3);
@@ -171,6 +171,8 @@ select {
     transition: all 0.3s ease;
     -webkit-appearance: none;
     appearance: none;
+    opacity: 1;
+    position: relative;
 }
 
 input[type="number"]:focus,
@@ -1079,7 +1081,14 @@ button:hover::before {
     /* 検索結果表示時の他の要素 */
     .training-section:has(.activity-search-results[style*="display: block"]) .form-group:not(:has(.activity-select-container)) {
         z-index: 0;
-        opacity: 0.8; /* 視覚的にも背景化 */
+        opacity: 1 !important;
+    }
+    
+    /* すべての入力フィールドの背景を確実に不透明に */
+    .training-section .form-group input[type="number"],
+    .training-section .form-group input[type="text"] {
+        background-color: rgba(50, 52, 70, 1) !important;
+        opacity: 1 !important;
     }
     
     /* モバイルでの検索結果コンテナ */
@@ -1112,6 +1121,20 @@ button:hover::before {
         background: rgba(0, 0, 0, 0.5);
         z-index: 99998;
         pointer-events: none;
+    }
+    
+    /* 検索結果が開いている時、他のフォーム要素を確実に背景に */
+    .training-section:has(.activity-search-results[style*="display: block"]) ~ .training-section {
+        z-index: 0 !important;
+        position: relative;
+    }
+    
+    /* 時間入力欄の背景を不透明に */
+    .section-duration {
+        background-color: var(--input-bg) !important;
+        opacity: 1 !important;
+        position: relative;
+        z-index: 1;
     }
     
     /* モバイルソートボタンの調整 */
