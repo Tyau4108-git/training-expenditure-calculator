@@ -733,27 +733,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let searchTimeout;
             let isResultsOpen = false;
             
-            // モバイル用オーバーレイの作成
-            let searchOverlay = document.querySelector('.search-overlay');
-            if (!searchOverlay && isTouchDevice) {
-                searchOverlay = document.createElement('div');
-                searchOverlay.className = 'search-overlay';
-                document.body.appendChild(searchOverlay);
-                
-                searchOverlay.addEventListener('click', () => {
-                    searchResults.style.display = 'none';
-                    isResultsOpen = false;
-                    searchOverlay.style.display = 'none';
-                    
-                    // z-indexをリセット
-                    const parentSection = container.closest('.training-section');
-                    if (parentSection) {
-                        parentSection.style.zIndex = '1';
-                        parentSection.style.marginBottom = '';
-                    }
-                });
-            }
-            
             searchInput.addEventListener('input', (e) => {
                 clearTimeout(searchTimeout);
                 const searchTerm = e.target.value.trim();
@@ -764,7 +743,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (searchTerm.length === 0) {
                     searchResults.style.display = 'none';
                     isResultsOpen = false;
-                    if (searchOverlay) searchOverlay.style.display = 'none';
                     return;
                 }
                 
@@ -773,11 +751,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const results = searchActivities(searchTerm);
                     displaySearchResults(results, searchResults, select, searchInput, selectedDisplay);
                     isResultsOpen = true;
-                    
-                    // モバイルでオーバーレイ表示
-                    if (searchOverlay && isTouchDevice) {
-                        searchOverlay.style.display = 'block';
-                    }
                 }, 300);
             });
             
@@ -800,6 +773,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!container.contains(e.target) && isResultsOpen) {
                     searchResults.style.display = 'none';
                     isResultsOpen = false;
+                    
+                    // モバイルの場合、位置をリセット
+                    if (window.innerWidth <= 768) {
+                        searchResults.style.position = '';
+                        searchResults.style.top = '';
+                        searchResults.style.left = '';
+                        searchResults.style.right = '';
+                        searchResults.style.width = '';
+                        searchResults.style.maxHeight = '';
+                    }
                     
                     // z-indexをリセット
                     const parentSection = container.closest('.training-section');
@@ -945,6 +928,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function displaySearchResults(results, resultsContainer, selectElement, searchInput, selectedDisplay) {
         resultsContainer.innerHTML = '';
         
+        // モバイルデバイスかチェック
+        const isMobile = window.innerWidth <= 768;
+        
         // 親要素のz-indexを管理
         const parentSection = resultsContainer.closest('.training-section');
         const allSections = document.querySelectorAll('.training-section');
@@ -957,6 +943,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // 現在のセクションを最前面に
         if (parentSection) {
             parentSection.style.zIndex = '500';
+        }
+        
+        // モバイルの場合、検索結果の位置を調整
+        if (isMobile) {
+            const searchInput = resultsContainer.previousElementSibling.querySelector('.activity-search-input');
+            if (searchInput) {
+                const rect = searchInput.getBoundingClientRect();
+                const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                
+                // 検索結果を固定位置に配置
+                resultsContainer.style.position = 'fixed';
+                resultsContainer.style.top = (rect.bottom + 5) + 'px';
+                resultsContainer.style.left = '1rem';
+                resultsContainer.style.right = '1rem';
+                resultsContainer.style.width = 'auto';
+                resultsContainer.style.maxHeight = `${window.innerHeight - rect.bottom - 20}px`;
+            }
         }
         
         if (results.length === 0) {
@@ -1039,17 +1042,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         resultItem.classList.add('selected');
                         setTimeout(() => {
                             resultsContainer.style.display = 'none';
+                            
+                            // モバイルの場合、位置をリセット
+                            if (window.innerWidth <= 768) {
+                                resultsContainer.style.position = '';
+                                resultsContainer.style.top = '';
+                                resultsContainer.style.left = '';
+                                resultsContainer.style.right = '';
+                                resultsContainer.style.width = '';
+                                resultsContainer.style.maxHeight = '';
+                            }
+                            
                             // z-indexをリセット
                             const parentSection = resultsContainer.closest('.training-section');
                             if (parentSection) {
                                 parentSection.style.zIndex = '1';
-                                parentSection.style.marginBottom = '';
-                            }
-                            
-                            // モバイルでオーバーレイを非表示
-                            const searchOverlay = document.querySelector('.search-overlay');
-                            if (searchOverlay && isTouchDevice) {
-                                searchOverlay.style.display = 'none';
                             }
                         }, 200);
                     });
